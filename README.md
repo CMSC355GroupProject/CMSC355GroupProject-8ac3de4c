@@ -1,7 +1,7 @@
 # 355GroupProject
- Group Members:
-Ian Mullins
-Ian Wynn
-Joey Fondaco
-Dara Olusina
-Matthew Vinso
+ Group Members: <br>
+Ian Mullins <br>
+Ian Wynn <br>
+Joey Fondaco <br>
+Dara Olusina <br>
+Matthew Vinso <br>
