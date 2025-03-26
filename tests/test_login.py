@@ -10,7 +10,7 @@ def login_user(username, password):
     if len(password) < 6:
         raise ValueError("Password must be at least 6 characters long.")
     
-    # Simulate a successful login check, matching the dummy data from the registration
+    # Test using dummy data from test_registration.py
     if username == "test_user" and password == "password123":
         return {"status": "success", "message": "Login successful."}
     
