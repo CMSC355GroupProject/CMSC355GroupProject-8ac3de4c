@@ -1,7 +1,6 @@
 import unittest
 from datetime import datetime
 
-# Register user function with day-month-year (DD-MM-YYYY) date format
 def register_user(username, email, password, dob, height, weight, biological_gender, phone_number):
     if not username:
         raise ValueError("Username is required.")
