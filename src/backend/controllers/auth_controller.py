@@ -1,8 +1,9 @@
-from flask import request, jsonify, current_app
+from flask import Flask, request, jsonify, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
-import jwt
+from flask_jwt_extended import JWTManager, create_access_token
 from datetime import datetime
 from app import mongo
+
 
 def is_valid_dob_format(dob_str):
     try:
@@ -10,7 +11,8 @@ def is_valid_dob_format(dob_str):
         return True
     except ValueError:
         return False
-    
+
+@app.route('/api/auth/register', methods=['POST'])    
 def register():
     data = request.get_json()
 
@@ -40,15 +42,30 @@ def register():
     mongo.db.patients.insert_one(data)
     return jsonify({ "message": "User registered successfully" }), 201
 
+@app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
-    user = mongo.db.patients.find_one({ "email": data["email"] })
-    if not user or not check_password_hash(user["password"], data["password"]):
-        return jsonify({ "error": "Invalid credentials" }), 401
 
-    token = jwt.encode({
-        "user_id": str(user["_id"]),
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=1)
-    }, current_app.config["SECRET_KEY"], algorithm="HS256")
+    # Validate input
+    if 'email' not in data or 'password' not in data:
+        return jsonify({"error": "Email and password are required"}), 400
 
-    return jsonify({ "token": token })
+    email = data["email"]
+    password = data["password"]
+
+    # Check if the user exists in the database
+    user = mongo.db.patients.find_one({"email": email})
+    if not user:
+        return jsonify({"error": "Invalid email or password"}), 401  # Unauthorized
+
+    # Compare hashed passwords
+    if not check_password_hash(user["password"], password):
+        return jsonify({"error": "Invalid email or password"}), 401
+
+    # Generate a token (if using JWT for session)
+    access_token = create_access_token(identity=user["email"])
+
+    return jsonify({
+        "message": "Login successful",
+        "access_token": access_token
+    }), 200

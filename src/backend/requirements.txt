@@ -1,5 +1,7 @@
+# pip install -r requirements.txt
 Flask
 Flask-PyMongo
+flask-jwt-extended
 python-dotenv
 pyjwt
 twilio
