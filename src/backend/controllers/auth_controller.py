@@ -12,7 +12,6 @@ def is_valid_dob_format(dob_str):
     except ValueError:
         return False
 
-@app.route('/api/auth/register', methods=['POST'])    
 def register():
     data = request.get_json()
 
@@ -42,7 +41,6 @@ def register():
     mongo.db.patients.insert_one(data)
     return jsonify({ "message": "User registered successfully" }), 201
 
-@app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
 
