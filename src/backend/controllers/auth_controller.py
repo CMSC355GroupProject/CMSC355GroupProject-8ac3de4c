@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify, current_app
+from flask import request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import JWTManager, create_access_token
+from flask_jwt_extended import create_access_token
 from datetime import datetime
 from app import mongo
 
