@@ -53,7 +53,7 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
-<body style="background-color:Gray;">
+<body style="background-color:White;">
     
         <div class="header">
         <h2>Dashboard</h2>
@@ -67,7 +67,53 @@
 <footer>
         <p>Footer goes here <br> © 2025. Blah Blah All rights reserved.</p>
     </footer>
-    <script src="script.js"></script>
+    <script
+  src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js">
+</script>
+<html>
+<head>
+  <title>Page Title</title>
+</head>
+<body>
+    <style>
+    p.one {
+      word-spacing: 270px;
+    }
+    h1.test {
+        line-height: 1000px;
+}
+    </style>
+
+<h1>Graph 1</h1>
+<canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+<h1 class ="test">Graph 2</h1>
+<h1 class ="test">Graph 3</h1>
+
+<script>
+const xValues = [1,2,3,4,5,6,7,8,9,10];
+const yValues = [10,20,30,40,50,60,70,80,90,100];
+    new Chart("myChart", {
+  type: "line",
+  data: {
+    labels: xValues,
+    datasets: [{
+      fill: false,
+      lineTension: 0,
+      backgroundColor: "rgba(0,0,255,1.0)",
+      borderColor: "rgba(0,0,255,0.1)",
+      data: yValues
+    }]
+  },
+  options: {
+    legend: {display: false},
+    scales: {
+      yAxes: [{ticks: {min: 6, max:100}}],
+    }
+  }
+});
+
+</script>
+
 </body>
   
 </html>
