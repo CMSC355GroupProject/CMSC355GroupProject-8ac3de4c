@@ -90,27 +90,65 @@
 <h1 class ="test">Graph 3</h1>
 
 <script>
-const xValues = [1,2,3,4,5,6,7,8,9,10];
-const yValues = [10,20,30,40,50,60,70,80,90,100];
-    new Chart("myChart", {
-  type: "line",
-  data: {
-    labels: xValues,
-    datasets: [{
-      fill: false,
-      lineTension: 0,
-      backgroundColor: "rgba(0,0,255,1.0)",
-      borderColor: "rgba(0,0,255,0.1)",
-      data: yValues
-    }]
-  },
-  options: {
-    legend: {display: false},
-    scales: {
-      yAxes: [{ticks: {min: 6, max:100}}],
+let myChart = null; // Variable to hold the chart instance
+
+async function fetchDataAndUpdateChart() {
+    try {
+        // Fetch the local file
+        const response = await fetch('dummy_data.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // --- Use fetched data to create the chart --- 
+        const xValues = data.time_data; // Use time for X-axis labels
+        const yValues = data.bpm_data;  // Use BPM for Y-axis data
+
+        // If a chart instance exists, destroy it first
+        if (myChart) {
+            myChart.destroy();
+        }
+
+        // Create the new chart
+        myChart = new Chart("myChart", {
+          type: "line",
+          data: {
+            labels: xValues,
+            datasets: [{
+              label: "BPM", // Keep it simple
+              fill: false,
+              lineTension: 0.1, // Minimal tension
+              backgroundColor: "rgba(0,0,255,1.0)",
+              borderColor: "rgba(0,0,255,0.5)",
+              data: yValues
+            }]
+          },
+          options: {
+            legend: {display: true},
+            scales: {
+              yAxes: [{ticks: {min: 50, max: 110}}], // Sensible scale for BPM
+              // Keep xAxes simple unless needed
+            }
+          }
+        });
+        // --- End chart creation ---
+
+    } catch (error) {
+        console.error('Error fetching or displaying chart data:', error);
+        // Optional: Display error message on the page
+        const canvas = document.getElementById('myChart');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.font = '16px Arial';
+            ctx.fillStyle = 'red';
+            ctx.fillText('Error loading chart data. Check console.', 10, 50);
+        }
     }
-  }
-});
+}
+
+// Fetch data and display chart when the page content is loaded
+document.addEventListener('DOMContentLoaded', fetchDataAndUpdateChart);
 
 </script>
 
