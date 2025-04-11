@@ -15,7 +15,7 @@
             font-family: Arial, sans-serif;
         }
 
-        /* Header styling */
+        /* Header */
         .header { 
      
             width: 100%;
@@ -31,9 +31,9 @@
             left: 0;
         }
 
-        /* Main content styling */
+        /* Content */
         .content {
-        	margin-top: 80px;
+        	margin-top: 220px;
          
             padding: 50px;
             background-color: white;
@@ -55,89 +55,133 @@
 
 <body style="background-color:White;">
     
-        <div class="header">
+    <div class="header">
         <h2>Dashboard</h2>
         <nav> <a href="#" style="color: white; margin: 0 15px;">Alerts</a>
             <a href="#" style="color: white; margin: 0 15px;">Settings</a>
-          
-            </nav>
-        </div>
-        <div class="content">Main Content</div>
+        </nav>
+    </div>
+    <div class="content">
+        <h1>Graph 1: BPM</h1>
+        <canvas id="bpmChart" style="width:100%;max-width:700px"></canvas>
+        
+        <h1>Graph 2: SpO2</h1>
+        <canvas id="spo2Chart" style="width:100%;max-width:700px"></canvas>
+        
+        <h1>Graph 3: ECG</h1>
+        <canvas id="ecgChart" style="width:100%;max-width:700px"></canvas>
+    </div>
    
-<footer>
+    <footer>
         <p>Footer goes here <br> © 2025. Blah Blah All rights reserved.</p>
     </footer>
-    <script
-  src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js">
-</script>
-<html>
-<head>
-  <title>Page Title</title>
-</head>
-<body>
-    <style>
-    p.one {
-      word-spacing: 270px;
-    }
-    h1.test {
-        line-height: 1000px;
-}
-    </style>
-
-<h1>Graph 1</h1>
-<canvas id="myChart" style="width:100%;max-width:700px"></canvas>
-<h1 class ="test">Graph 2</h1>
-<h1 class ="test">Graph 3</h1>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
 <script>
-let myChart = null; // Variable to hold the chart instance
+let bpmChartInstance = null;
+let spo2ChartInstance = null;
+let ecgChartInstance = null;
 
 async function fetchDataAndUpdateChart() {
     try {
-        // Fetch data from the Flask backend API
-        const response = await fetch('http://127.0.0.1:5000/api/vitals/vitals'); // Updated absolute URL
+        // Fetch data
+        const response = await fetch('http://127.0.0.1:5000/api/vitals/vitals'); 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
 
-        // --- Use fetched data to create the chart --- 
-        const xValues = data.time_data; // Use time from API for X-axis labels
-        const yValues = data.bpm_data;  // Use BPM from API for Y-axis data
+        // Extract data
+        const timeLabels = data.time_data;
+        const bpmValues = data.bpm_data;
+        const spo2Values = data.spo2_data;
+        
+        // Get latest ECG data
+        const latestEcgValues = data.ecg_data && data.ecg_data.length > 0 ? data.ecg_data[data.ecg_data.length - 1] : [];
+        const ecgLabels = Array.from({ length: latestEcgValues.length }, (_, i) => i);
 
-        // If a chart instance exists, destroy it first
-        if (myChart) {
-            myChart.destroy();
-        }
+        // Destroy old charts
+        if (bpmChartInstance) { bpmChartInstance.destroy(); }
+        if (spo2ChartInstance) { spo2ChartInstance.destroy(); }
+        if (ecgChartInstance) { ecgChartInstance.destroy(); }
 
-        // Create the new chart
-        myChart = new Chart("myChart", {
+        //BPM Chart
+        bpmChartInstance = new Chart("bpmChart", {
           type: "line",
           data: {
-            labels: xValues,
+            labels: timeLabels,
             datasets: [{
-              label: "BPM", // Keep it simple
+              label: "BPM",
               fill: false,
-              lineTension: 0.1, // Minimal tension
+              lineTension: 0.1,
               backgroundColor: "rgba(0,0,255,1.0)",
               borderColor: "rgba(0,0,255,0.5)",
-              data: yValues
+              data: bpmValues
             }]
           },
           options: {
             legend: {display: true},
             scales: {
-              yAxes: [{ticks: {min: 50, max: 110}}], // Sensible scale for BPM
-              // Keep xAxes simple unless needed
+              yAxes: [{ticks: {min: 50, max: 110}}],
             }
           }
         });
-        // --- End chart creation ---
+
+        // SpO2 Chart
+        spo2ChartInstance = new Chart("spo2Chart", {
+          type: "line",
+          data: {
+            labels: timeLabels,
+            datasets: [{
+              label: "SpO2 (%)",
+              fill: false,
+              lineTension: 0.1,
+              backgroundColor: "rgba(0,255,0,1.0)",
+              borderColor: "rgba(0,255,0,0.5)",
+              data: spo2Values
+            }]
+          },
+          options: {
+            legend: { display: true },
+            scales: {
+              yAxes: [{ ticks: { min: 90, max: 100 } }]
+            }
+          }
+        });
+        
+        // ECG Chart
+        ecgChartInstance = new Chart("ecgChart", {
+          type: "line",
+          data: {
+            labels: ecgLabels,
+            datasets: [{
+              label: "ECG",
+              fill: false,
+              lineTension: 0.1,
+              backgroundColor: "rgba(255,0,0,1.0)",
+              borderColor: "rgba(255,0,0,0.5)",
+              pointRadius: 0,
+              borderWidth: 1.5,
+              data: latestEcgValues
+            }]
+          },
+          options: {
+            legend: { display: true },
+            scales: {
+              yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 } }],
+              xAxes: [{ display: false }]
+            },
+            animation: {
+                duration: 0
+            }
+          }
+        });
 
     } catch (error) {
         console.error('Error fetching or displaying chart data:', error);
-        // Optional: Display error message on the page
-        const canvas = document.getElementById('myChart');
+        // Show error message
+        const canvas = document.getElementById('bpmChart');
         if (canvas) {
             const ctx = canvas.getContext('2d');
             ctx.font = '16px Arial';
@@ -147,14 +191,13 @@ async function fetchDataAndUpdateChart() {
     }
 }
 
-// Fetch data and display chart when the page content is loaded
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    fetchDataAndUpdateChart(); // Initial fetch
-    setInterval(fetchDataAndUpdateChart, 5000); // Fetch data every 5 seconds
+    fetchDataAndUpdateChart(); // First fetch
+    setInterval(fetchDataAndUpdateChart, 5000); // Update every 5s
 });
 
 </script>
 
 </body>
-  
 </html>
