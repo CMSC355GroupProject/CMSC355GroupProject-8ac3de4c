@@ -1,9 +1,12 @@
-# src/backend/routes/alert_routes.py
 from flask import Blueprint
+from controllers import alert_controller
 
 alert_bp = Blueprint('alert_bp', __name__)
 
-@alert_bp.route('/alerts', methods=['GET'])
+@alert_bp.route('/', methods=['POST'])
+def create_alert():
+    return alert_controller.create_alert()
+
+@alert_bp.route('/', methods=['GET'])
 def get_alerts():
-    # Logic to retrieve or handle alerts
-    return {'message': 'Alert data here'}
+    return alert_controller.get_alerts()
