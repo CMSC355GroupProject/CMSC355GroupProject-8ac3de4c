@@ -16,3 +16,6 @@ build/
 
 # Ignore any temporary files
 *.log
+
+# Pycache
+__pycache__/
