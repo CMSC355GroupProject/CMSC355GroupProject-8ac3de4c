@@ -94,16 +94,16 @@ let myChart = null; // Variable to hold the chart instance
 
 async function fetchDataAndUpdateChart() {
     try {
-        // Fetch the local file
-        const response = await fetch('dummy_data.json');
+        // Fetch data from the Flask backend API
+        const response = await fetch('http://127.0.0.1:5000/api/vitals/vitals'); // Updated absolute URL
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
 
         // --- Use fetched data to create the chart --- 
-        const xValues = data.time_data; // Use time for X-axis labels
-        const yValues = data.bpm_data;  // Use BPM for Y-axis data
+        const xValues = data.time_data; // Use time from API for X-axis labels
+        const yValues = data.bpm_data;  // Use BPM from API for Y-axis data
 
         // If a chart instance exists, destroy it first
         if (myChart) {
@@ -148,7 +148,10 @@ async function fetchDataAndUpdateChart() {
 }
 
 // Fetch data and display chart when the page content is loaded
-document.addEventListener('DOMContentLoaded', fetchDataAndUpdateChart);
+document.addEventListener('DOMContentLoaded', () => {
+    fetchDataAndUpdateChart(); // Initial fetch
+    setInterval(fetchDataAndUpdateChart, 5000); // Fetch data every 5 seconds
+});
 
 </script>
 
