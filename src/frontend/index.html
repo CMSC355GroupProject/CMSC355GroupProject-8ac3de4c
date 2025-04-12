@@ -92,10 +92,11 @@ async function fetchDataAndUpdateChart() {
         }
         const data = await response.json();
 
-        // Extract data
-        const timeLabels = data.time_data;
-        const bpmValues = data.bpm_data;
-        const spo2Values = data.spo2_data;
+        // Extract data and limit to last 24 points
+        const maxPoints = 24;
+        const timeLabels = data.time_data.slice(-maxPoints);
+        const bpmValues = data.bpm_data.slice(-maxPoints);
+        const spo2Values = data.spo2_data.slice(-maxPoints);
         
         // Get latest ECG data
         const latestEcgValues = data.ecg_data && data.ecg_data.length > 0 ? data.ecg_data[data.ecg_data.length - 1] : [];
