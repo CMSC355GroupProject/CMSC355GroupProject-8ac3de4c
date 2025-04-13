@@ -38,6 +38,10 @@ def create_app():
     @app.route('/index')
     def index():
         return render_template('index.html')
+    
+    @app.route('/alerts')
+    def alerts():
+        return render_template('alerts.html')
 
     from routes.auth_routes    import auth_bp
     from routes.patient_routes import patient_bp
