@@ -14,10 +14,10 @@
 
   <p id="message"></p>
 
-  <p>Don't have an account?</p>
-  <a href="register.html">
-    <button>Register</button>
-  </a>
+  <p>Don't have an account? </p>
+  <form action="/register" method="GET">
+    <button type="submit">Register</button>
+  </form>
 
   <script>
     document.getElementById('loginForm').addEventListener('submit', async function (e) {
@@ -26,7 +26,7 @@
       const email = e.target.email.value;
       const password = e.target.password.value;
 
-      const res = await fetch('http://localhost:5000/login', {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -38,7 +38,7 @@
       if (res.ok) {
         msg.textContent = "Login successful!";
         localStorage.setItem("patient", JSON.stringify(data));
-        window.location.href = "dashboard.html";  // or wherever you want to go
+        window.location.href = "/index";  // or wherever you want to go
       } else {
         msg.textContent = data.message || "Login failed.";
       }
