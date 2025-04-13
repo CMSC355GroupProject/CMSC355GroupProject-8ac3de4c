@@ -12,7 +12,8 @@ jwt   = JWTManager()
 
 def create_app():
     app = Flask(__name__,
-            static_folder='../frontend/assets',  # Folder with your static files
+            static_folder='../frontend',  # Folder with your static files
+            static_url_path='',
             template_folder='../frontend')
     
     CORS(app)
