@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div id="bodyContainer">
+  <h2>Register</h2>
+
+  <form id="registerForm">
+    <input type="text" name="username" placeholder="Username" required /><br />
+    <input type="email" name="email" placeholder="Email" required /><br />
+    <input type="password" name="password" placeholder="Password" required /><br />
+    <input type="text" name="dob" placeholder="Date of Birth (MM-DD-YYYY)" required /><br />
+
+    <label>Height:</label><br />
+    <input type="number" name="height_feet" placeholder="Feet" min="0" required />
+    <input type="number" name="height_inches" placeholder="Inches" min="0" max="11" required /><br />
+
+    <input type="number" name="weight" placeholder="Weight (lbs)" required /><br />
+
+    <select name="biological_gender" required>
+      <option value="" disabled selected>Select Gender</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select><br />
+
+    <input type="tel" name="phone_number" placeholder="Phone Number (e.g. +12223334444)" required /><br />
+
+    <button type="submit">Register</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+  
+      const form = e.target;
+  
+      const feet = parseInt(form.height_feet.value);
+      const inches = parseInt(form.height_inches.value);
+      const height_cm = Math.round((feet * 12 + inches) * 2.54); // Convert to cm
+  
+      const data = {
+        username: form.username.value,
+        email: form.email.value,
+        password: form.password.value,
+        dob: form.dob.value,
+        height: height_cm,
+        weight: parseInt(form.weight.value),
+        biological_gender: form.biological_gender.value,
+        phone_number: form.phone_number.value
+      };
+  
+      const res = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+  
+      const result = await res.json();
+      const msg = document.getElementById('message');
+  
+      if (res.ok) {
+        msg.textContent = "Registered successfully! Redirecting to login...";
+        setTimeout(() => {
+          window.location.href = "/";  // Redirect to login page
+        }, 1500); // 1.5 second delay so user sees the message
+      } else {
+        msg.textContent = result.error || "Registration failed.";
+      }
+    });
+  </script>
+  </div>
+</body>
+</html>
