@@ -4,14 +4,14 @@ from datetime import datetime
 from app import mongo
 from models.alert import format_alert
 from twilio.rest import Client
+import os
 
-# Twilio Recovery Code
-# 4816HS8SX821G12Y7GN4WXXY
+
 
 # Twilio Configuration
-TWILIO_ACCOUNT_SID = 'AC8a65da175e06cf5a463864af085948f6'
-TWILIO_AUTH_TOKEN = 'aadcafe6f95e678adbc43d45bfa8263c'
-TWILIO_PHONE_NUMBER = '+18447901236'
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 
 # POST: Create an alert
 def create_alert():
