@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <title>Alert Manager</title>
   <link rel="stylesheet" href="/css/styles.css">
-  <!-- Include jwt-decode if necessary, though you won't need it for patient from localStorage -->
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
 </head>
 <body>
@@ -16,14 +15,10 @@
       <label>
         Sensor Type
         <select name="sensor_type" required>
-          <option value="ecg">ECG</option>
-          <option value="spo2">SpO2</option>
-          <option value="bpm">BPM</option>
+          <option value="ECG">ECG</option>
+          <option value="SPO2">SPO2</option>
+          <option value="BPM">BPM</option>
         </select>
-      </label>
-      <label>
-        Threshold Value
-        <input type="number" name="threshold_value" required />
       </label>
       <label>
         Comparison
@@ -32,6 +27,10 @@
           <option value="<">Less Than (&lt;)</option>
           <option value="=">Equal To (=)</option>
         </select>
+      </label>
+      <label>
+        Threshold Value
+        <input type="number" name="threshold_value" required />
       </label>
       <label>
         Message
@@ -59,67 +58,6 @@
     </table>
   </div>
 
-  <script>
-    const API = '/api/alerts/';
-  
-    // Load existing alerts
-    async function loadAlerts() {
-      const res = await fetch(API);
-      const alerts = await res.json();
-      const tbody = document.getElementById('alertsBody');
-      tbody.innerHTML = '';
-  
-      alerts.forEach(a => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${a.sensor_type || ''}</td>
-          <td>${a.measured_value ?? ''}</td>
-          <td>${a.threshold_value ?? ''}</td>
-          <td>${a.comparison || ''}</td>
-          <td>${a.message || ''}</td>
-          <td>${a.is_sent}</td>
-          <td>${a.timestamp ? new Date(a.timestamp).toLocaleString() : ''}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-  
-    // Create new alert
-    document.getElementById('alertForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-  
-      const patient = JSON.parse(localStorage.getItem("patient"));
-      if (!patient || !patient.patient_id) {
-        alert('Patient ID missing from localStorage');
-        return;
-      }
-  
-      const payload = {
-        patient_id: patient.patient_id,
-        sensor_type: form.sensor_type.value,
-        threshold_value: parseFloat(form.threshold_value.value),
-        comparison: form.comparison.value,  // now using symbols like <, >, =
-        message: form.message.value
-      };
-  
-      const res = await fetch(API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-  
-      if (res.ok) {
-        form.reset();
-        loadAlerts();
-      } else {
-        const err = await res.json();
-        console.error('Failed to create alert:', err);
-        alert('Failed to create alert');
-      }
-    });
-  
-    loadAlerts();
-  </script>
+  <script src="./js/alerts.js" defer></script>
 </body>
 </html>

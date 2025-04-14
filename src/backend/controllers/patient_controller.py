@@ -14,10 +14,18 @@ def create_patient():
     new_patient = mongo.db.patients.find_one({"_id": new_id})
     return jsonify(format_patient(new_patient)), 201
 
+from flask_jwt_extended import get_jwt_identity, jwt_required, get_jwt
+
 @jwt_required()
 def get_current_patient():
-    current_user_email = get_jwt_identity()
-    patient = mongo.db.patients.find_one({"email": current_user_email})
+    claims = get_jwt()
+    patient_id = claims.get("patient_id") 
+
+    if not patient_id:
+        return jsonify({"error": "Patient ID not found in token"}), 400
+
+    patient = mongo.db.patients.find_one({"_id": ObjectId(patient_id)})
     if not patient:
         return jsonify({"error": "Patient not found"}), 404
+
     return jsonify(format_patient(patient)), 200
