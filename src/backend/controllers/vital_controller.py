@@ -22,7 +22,7 @@ def create_dummy_vitals(patient_id):
     vitals_doc = generate_vital_data(patient_obj_id)
 
     # Ensure the timestamp is a datetime object that MongoDB can insert
-    vitals_doc["timestamp"] = datetime.utcnow()  # Use UTC time for consistency
+    vitals_doc["timestamp"] = datetime.utcnow()  
 
     # Insert vitals document
     insert_result = mongo.db.vitals.insert_one(vitals_doc)
@@ -30,7 +30,7 @@ def create_dummy_vitals(patient_id):
     # Return what was inserted
     return {
         "patient_id": str(vitals_doc["patient_id"]),
-        "timestamp": vitals_doc["timestamp"].isoformat(),  # Return the timestamp as a string
+        "timestamp": vitals_doc["timestamp"].isoformat(),  
         "bpm": vitals_doc["bpm"],
         "spo2": vitals_doc["spo2"],
         "ecg": vitals_doc["ecg"]
@@ -49,7 +49,7 @@ def get_latest_vitals(patient_id):
     )
 
     if not vitals_doc:
-        print(f"No vitals found for patient_id: {patient_id}")  # Debugging line
+        print(f"No vitals found for patient_id: {patient_id}") 
         return {"message": "No vitals found for this patient"}, 404
 
     return {
@@ -59,15 +59,3 @@ def get_latest_vitals(patient_id):
         "spo2": vitals_doc["spo2"],
         "ecg": vitals_doc["ecg"]
     }, 200
-
-
-def start_dummy_vitals_loop(patient_id):
-    def loop():
-        while True:
-            result, status = create_dummy_vitals(patient_id)
-            print(f"[Vitals Loop] Status: {status}, Result: {result}")
-            time.sleep(30)  # Wait 30 seconds before generating the next set
-
-    thread = threading.Thread(target=loop)
-    thread.daemon = True  # Make sure the thread doesn't block app shutdown
-    thread.start()
