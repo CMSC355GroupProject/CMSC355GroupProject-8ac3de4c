@@ -15,13 +15,9 @@
         Sensor Type
         <select name="sensor_type" required>
           <option value="ecg">ECG</option>
-          <option value="spO2">SpO2</option>
+          <option value="spo2">SpO2</option>
           <option value="bpm">BPM</option>
         </select>
-      </label>
-      <label>
-        Measured Value
-        <input type="number" name="measured_value" required />
       </label>
       <label>
         Threshold Value
@@ -92,7 +88,6 @@
       const form = e.target;
       const payload = {
         sensor_type: form.sensor_type.value,
-        measured_value: parseFloat(form.measured_value.value),
         threshold_value: parseFloat(form.threshold_value.value),
         comparison: form.comparison.value,
         message: form.message.value
@@ -111,6 +106,7 @@
         alert('Failed to create alert');
       }
     });
+
     loadAlerts();
   </script>
 </body>

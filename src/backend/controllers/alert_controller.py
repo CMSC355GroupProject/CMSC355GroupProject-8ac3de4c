@@ -3,15 +3,12 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from app import mongo
 from models.alert import format_alert
+from models.vital import generate_vital_data
 from twilio.rest import Client
 import os
 
 
 
-# Twilio Configuration
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 
 # POST: Create an alert
 def create_alert():
@@ -39,12 +36,18 @@ def create_alert():
         return jsonify({
             "error": f"Invalid sensor_type: {sensor_type}. Must be one of {list(allowed_sensor_types)}"
         }), 400
+    
+    # Generate a fresh vitals doc
+    vitals = generate_vital_data(patient_obj_id)
+
+    # Pick out the right measured_value
+    measured_value = vitals[sensor_type.lower()]
 
     # Build alert document
     alert = {
         "patient_id": patient_obj_id,
         "sensor_type": data.get("sensor_type"),
-        "measured_value": data.get("measured_value"),
+        "measured_value": measured_value,
         "threshold_value": data.get("threshold_value"),
         "comparison": data.get("comparison"),
         "timestamp": datetime.utcnow(),
@@ -53,34 +56,47 @@ def create_alert():
         "sent_at": None
     }
 
+    # Twilio Configuration
+    TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+    TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
+    print('Twilio SID: ',TWILIO_ACCOUNT_SID)
+    print('Twilio Token: ',TWILIO_AUTH_TOKEN)
+
     # Add Twilio integration to send alert
-    if alert["is_sent"] == False:
-        try:
-            # Initialize Twilio client
-            client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    # if alert["is_sent"] == False:
+    #     try:
+    #         # Initialize Twilio client
+    #         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-            # Construct the SMS message
-            message = f"Alert for patient {patient_id}: {alert['sensor_type']} has exceeded threshold! {alert['message']}"
+    #         # Construct the SMS message
+    #         message = f"Alert for patient {patient_id}: {alert['sensor_type']} has exceeded threshold! {alert['message']}"
 
-            # Send SMS to the patient's contact number
-            patient_phone = patient.get('phone_number')
-            if patient_phone:
-                client.messages.create(
-                    body=message,
-                    from_=TWILIO_PHONE_NUMBER,
-                    to=patient_phone
-                )
-                # Update alert to mark as sent
-                alert["is_sent"] = True
-                alert["sent_at"] = datetime.utcnow()
+    #         # Send SMS to the patient's contact number
+    #         patient_phone = patient.get('phone_number')
+    #         if patient_phone:
+    #             client.messages.create(
+    #                 body=message,
+    #                 from_=TWILIO_PHONE_NUMBER,
+    #                 to=patient_phone
+    #             )
+    #             # Update alert to mark as sent
+    #             alert["is_sent"] = True
+    #             alert["sent_at"] = datetime.utcnow()
 
-        except Exception as e:
-            return jsonify({"error": f"Failed to send SMS: {str(e)}"}), 500
+    #     except Exception as e:
+    #         return jsonify({"error": f"Failed to send SMS: {str(e)}"}), 500
         
     # Insert into DB
     new_id = mongo.db.alerts.insert_one(alert).inserted_id
     new_alert = mongo.db.alerts.find_one({"_id": new_id})
+
+    new_vital = generate_vital_data(patient_obj_id)
+    new_vital["timestamp"] = datetime.utcnow()
+    mongo.db.vitals.insert_one(new_vital)
+
     return jsonify(format_alert(new_alert)), 201
+    
 
 
 # GET: Retrieve alerts
