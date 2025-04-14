@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>Dashboard</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
     
     <style>
-       
         * {
             margin: 0;
             padding: 0;
@@ -17,10 +16,9 @@
 
         /* Header */
         .header { 
-     
             width: 100%;
-    		Height: 200px;
-     		background-color: lightblue;
+            height: 200px;
+            background-color: lightblue;
             color: white;
             display: flex;
             align-items: center;
@@ -33,14 +31,14 @@
 
         /* Content */
         .content {
-        	margin-top: 220px;
-         
+            margin-top: 220px;
             padding: 50px;
             background-color: white;
             color: black;
         }
+
         footer {
-        	text-align: center;
+            text-align: center;
             padding: 15px;
             background-color: black;
             color: white;
@@ -57,7 +55,8 @@
     
     <div class="header">
         <h2>Dashboard</h2>
-        <nav> <a href="#" style="color: white; margin: 0 15px;">Alerts</a>
+        <nav>
+            <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
             <a href="#" style="color: white; margin: 0 15px;">Settings</a>
         </nav>
     </div>
@@ -78,127 +77,94 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
-<script>
-let bpmChartInstance = null;
-let spo2ChartInstance = null;
-let ecgChartInstance = null;
-
-async function fetchDataAndUpdateChart() {
-    try {
-        // Fetch data
-        const response = await fetch('http://127.0.0.1:5000/api/vitals/vitals'); 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-
-        // Extract data and limit to last 24 points
+    <script>
+        // Keep these arrays alive across fetches
         const maxPoints = 24;
-        const timeLabels = data.time_data.slice(-maxPoints);
-        const bpmValues = data.bpm_data.slice(-maxPoints);
-        const spo2Values = data.spo2_data.slice(-maxPoints);
-        
-        // Get latest ECG data
-        const latestEcgValues = data.ecg_data && data.ecg_data.length > 0 ? data.ecg_data[data.ecg_data.length - 1] : [];
-        const ecgLabels = Array.from({ length: latestEcgValues.length }, (_, i) => i);
-
-        // Destroy old charts
-        if (bpmChartInstance) { bpmChartInstance.destroy(); }
-        if (spo2ChartInstance) { spo2ChartInstance.destroy(); }
-        if (ecgChartInstance) { ecgChartInstance.destroy(); }
-
-        //BPM Chart
-        bpmChartInstance = new Chart("bpmChart", {
-          type: "line",
-          data: {
-            labels: timeLabels,
-            datasets: [{
-              label: "BPM",
-              fill: false,
-              lineTension: 0.1,
-              backgroundColor: "rgba(0,0,255,1.0)",
-              borderColor: "rgba(0,0,255,0.5)",
-              data: bpmValues
-            }]
-          },
-          options: {
-            legend: {display: true},
-            scales: {
-              yAxes: [{ticks: {min: 50, max: 110}}],
+        let timeData = [];
+        let bpmData  = [];
+        let spo2Data = [];
+        let ecgData  = [];
+      
+        let bpmChartInstance = null;
+        let spo2ChartInstance = null;
+        let ecgChartInstance = null;
+      
+        async function fetchDataAndUpdateChart() {
+          try {
+            const patientData = JSON.parse(localStorage.getItem("patient"));
+            const token       = patientData?.access_token;
+            if (!token) {
+              console.error("No access token found");
+              return;
             }
+      
+            const response = await fetch('http://127.0.0.1:5000/api/vitals/', {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+            const { timestamp, bpm, spo2, ecg } = await response.json();
+      
+            // Push new values onto the arrays
+            timeData.push(timestamp);
+            bpmData.push(bpm);
+            spo2Data.push(spo2);
+            ecgData.push(ecg);
+      
+            // Trim arrays to maxPoints
+            if (timeData.length  > maxPoints) timeData.shift();
+            if (bpmData.length   > maxPoints) bpmData.shift();
+            if (spo2Data.length  > maxPoints) spo2Data.shift();
+            if (ecgData.length   > maxPoints) ecgData.shift();
+      
+            // Re‑draw charts
+            if (bpmChartInstance)  bpmChartInstance.destroy();
+            if (spo2ChartInstance) spo2ChartInstance.destroy();
+            if (ecgChartInstance)  ecgChartInstance.destroy();
+      
+            bpmChartInstance = new Chart("bpmChart", {
+              type: "line",
+              data: {
+                labels: timeData,
+                datasets: [{ label: "BPM", data: bpmData, fill: false, lineTension: 0.1 }]
+              },
+              options: { scales: { yAxes: [{ ticks: { min: 50, max: 110 }}] } }
+            });
+      
+            spo2ChartInstance = new Chart("spo2Chart", {
+              type: "line",
+              data: {
+                labels: timeData,
+                datasets: [{ label: "SpO2 (%)", data: spo2Data, fill: false, lineTension: 0.1 }]
+              },
+              options: { scales: { yAxes: [{ ticks: { min: 90, max: 100 }}] } }
+            });
+      
+            ecgChartInstance = new Chart("ecgChart", {
+              type: "line",
+              data: {
+                labels: timeData,
+                datasets: [{ label: "ECG", data: ecgData, fill: false, lineTension: 0.1, pointRadius: 0 }]
+              },
+              options: {
+                scales: {
+                  yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 }}],
+                  xAxes: [{ display: false }]
+                },
+                animation: { duration: 0 }
+              }
+            });
+      
+          } catch (err) {
+            console.error("Error updating charts:", err);
           }
-        });
-
-        // SpO2 Chart
-        spo2ChartInstance = new Chart("spo2Chart", {
-          type: "line",
-          data: {
-            labels: timeLabels,
-            datasets: [{
-              label: "SpO2 (%)",
-              fill: false,
-              lineTension: 0.1,
-              backgroundColor: "rgba(0,255,0,1.0)",
-              borderColor: "rgba(0,255,0,0.5)",
-              data: spo2Values
-            }]
-          },
-          options: {
-            legend: { display: true },
-            scales: {
-              yAxes: [{ ticks: { min: 90, max: 100 } }]
-            }
-          }
-        });
-        
-        // ECG Chart
-        ecgChartInstance = new Chart("ecgChart", {
-          type: "line",
-          data: {
-            labels: ecgLabels,
-            datasets: [{
-              label: "ECG",
-              fill: false,
-              lineTension: 0.1,
-              backgroundColor: "rgba(255,0,0,1.0)",
-              borderColor: "rgba(255,0,0,0.5)",
-              pointRadius: 0,
-              borderWidth: 1.5,
-              data: latestEcgValues
-            }]
-          },
-          options: {
-            legend: { display: true },
-            scales: {
-              yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 } }],
-              xAxes: [{ display: false }]
-            },
-            animation: {
-                duration: 0
-            }
-          }
-        });
-
-    } catch (error) {
-        console.error('Error fetching or displaying chart data:', error);
-        // Show error message
-        const canvas = document.getElementById('bpmChart');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.font = '16px Arial';
-            ctx.fillStyle = 'red';
-            ctx.fillText('Error loading chart data. Check console.', 10, 50);
         }
-    }
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    fetchDataAndUpdateChart(); // First fetch
-    setInterval(fetchDataAndUpdateChart, 5000); // Update every 5s
-});
-
-</script>
+      
+        document.addEventListener('DOMContentLoaded', () => {
+          fetchDataAndUpdateChart();
+          setInterval(fetchDataAndUpdateChart, 5000);
+        });
+      </script>
 
 </body>
 </html>

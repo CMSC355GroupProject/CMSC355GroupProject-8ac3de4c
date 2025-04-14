@@ -6,3 +6,5 @@ flask-jwt-extended
 python-dotenv
 pyjwt
 twilio
+requests
+PyMongo

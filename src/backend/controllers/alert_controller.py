@@ -22,6 +22,14 @@ def create_alert():
     patient = mongo.db.patients.find_one({"_id": patient_obj_id})
     if not patient:
         return jsonify({"error": "Patient not found"}), 404
+    
+    # Validate sensor_type
+    sensor_type = data.get("sensor_type")
+    allowed_sensor_types = {"BPM", "SPO2", "ECG"}
+    if sensor_type not in allowed_sensor_types:
+        return jsonify({
+            "error": f"Invalid sensor_type: {sensor_type}. Must be one of {list(allowed_sensor_types)}"
+        }), 400
 
     # Build alert document
     alert = {

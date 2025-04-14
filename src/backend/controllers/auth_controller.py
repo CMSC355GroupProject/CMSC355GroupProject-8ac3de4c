@@ -61,7 +61,10 @@ def login():
         return jsonify({"error": "Invalid email or password"}), 401
 
     # Generate a token (if using JWT for session)
-    access_token = create_access_token(identity=user["email"])
+    access_token = create_access_token(
+    identity=user["email"],  # this will be returned by get_jwt_identity()
+    additional_claims={"patient_id": str(user["_id"])}  # can access with get_jwt()["patient_id"]
+)
 
     return jsonify({
         "message": "Login successful",
