@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <title>Alert Manager</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <!-- Include jwt-decode if necessary, though you won't need it for patient from localStorage -->
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
 </head>
 <body>
   <div class="alerts-container">
@@ -26,9 +28,9 @@
       <label>
         Comparison
         <select name="comparison" required>
-          <option value="gt">Greater Than (&gt;)</option>
-          <option value="lt">Less Than (&lt;)</option>
-          <option value="eq">Equal To (=)</option>
+          <option value=">">Greater Than (&gt;)</option>
+          <option value="<">Less Than (&lt;)</option>
+          <option value="=">Equal To (=)</option>
         </select>
       </label>
       <label>
@@ -58,7 +60,7 @@
   </div>
 
   <script>
-    const API = '/api/alerts';
+    const API = '/api/alerts/';
 
     // Fetch and render all alerts
     async function loadAlerts() {
@@ -86,7 +88,18 @@
     document.getElementById('alertForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target;
+
+      // Retrieve the patient data from localStorage
+      const patient = JSON.parse(localStorage.getItem("patient"));
+      console.log('Patient ID on alerts.html: ',patient.patient_id)
+
+      if (!patient) {
+        alert('No patient data found in localStorage');
+        return;
+      }
+
       const payload = {
+        patient_id: patient.patient_id,  // Use the patient_id from localStorage
         sensor_type: form.sensor_type.value,
         threshold_value: parseFloat(form.threshold_value.value),
         comparison: form.comparison.value,
