@@ -16,7 +16,16 @@ async function loadSettings() {
     // "weight": 75,
     // "biological_gender": "male",
     // "phone_number": "+15555551234"
+    
+    
     document.getElementById('username').value = data.username || '';
+    document.getElementById('email').value = data.email || '';
+    document.getElementById('password').value = data.password || '';
+    document.getElementById('dob').value = data.dob || '';
+    document.getElementById('height').value = data.height || '';
+    document.getElementById('weight').value = data.weight || '';
+    document.getElementById('biological_gender').value = data.biological_gender || '';
+    document.getElementById('phone_number').value = data.email || '';
   } else {
     alert("Failed to load settings.");
   }
