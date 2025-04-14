@@ -39,6 +39,7 @@
       if (res.ok) {
         msg.textContent = "Login successful!";
         localStorage.setItem("patient", JSON.stringify(data));
+        localStorage.setItem("access_token", data.access_token); 
         window.location.href = "/index";  // or wherever you want to go
       } else {
         msg.textContent = data.message || "Login failed.";
