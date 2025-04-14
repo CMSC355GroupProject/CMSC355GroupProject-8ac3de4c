@@ -54,29 +54,6 @@ def create_alert():
     }
 
     # Add Twilio integration to send alert (your Twilio code here)
-    if alert["is_sent"] == False:
-        try:
-            # Initialize Twilio client
-            client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-            # Construct the SMS message
-            message = f"Alert for patient {patient_id}: {alert['sensor_type']} has exceeded threshold! {alert['message']}"
-
-            # Send SMS to the patient's contact number (assuming the patient document contains a phone_number field)
-            patient_phone = patient.get('phone_number')
-            if patient_phone:
-                client.messages.create(
-                    body=message,
-                    from_=TWILIO_PHONE_NUMBER,
-                    to=patient_phone
-                )
-                # Update alert to mark as sent
-                alert["is_sent"] = True
-                alert["sent_at"] = datetime.utcnow()
-
-        except Exception as e:
-            return jsonify({"error": f"Failed to send SMS: {str(e)}"}), 500
-    # end Twilio
 
     # Insert into DB
     new_id = mongo.db.alerts.insert_one(alert).inserted_id
