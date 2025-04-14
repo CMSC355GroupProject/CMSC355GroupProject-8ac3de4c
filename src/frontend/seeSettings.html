@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 30px;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+
+    #bodyContainer {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    form label {
+      font-weight: 500;
+      margin-top: 15px;
+      display: block;
+    }
+
+    form input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    form input[type="number"] {
+      max-width: 100%;
+    }
+
+    .height-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .height-group input {
+      flex: 1;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #message {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="bodyContainer">
+    <h2>Settings</h2>
+
+    <form id="settings">
+      <label for="height_feet">Height (Feet & Inches):</label>
+      <div class="height-group">
+        <input type="number" id="height_feet" name="height_feet" placeholder="Feet" min="0" required />
+        <input type="number" id="height_inches" name="height_inches" placeholder="Inches" min="0" max="11" required />
+      </div>
+
+      <label for="weight">Weight (lbs):</label>
+      <input type="number" id="weight" name="weight" placeholder="Weight in pounds" required />
+
+      <label for="phone_number">Phone Number:</label>
+      <input type="tel" id="phone_number" name="phone_number" placeholder="+12223334444" required />
+
+      <button type="submit">Save Changes</button>
+    </form>
+
+    <p id="message"></p>
+  </div>
+
+  <script>
+    document.getElementById('settings').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+
+      const feet = parseInt(form.height_feet.value);
+      const inches = parseInt(form.height_inches.value);
+      const height_cm = Math.round((feet * 12 + inches) * 2.54);
+
+      const data = {
+        height: height_cm,
+        weight: parseInt(form.weight.value),
+        phone_number: form.phone_number.value
+      };
+
+      const res = await fetch('http://localhost:5000/api/settings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      const msg = document.getElementById('message');
+
+      if (res.ok) {
+        msg.textContent = "Changes saved successfully.";
+        msg.style.color = "green";
+      } else {
+        msg.textContent = result.error || "Update failed.";
+        msg.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>
+
+
