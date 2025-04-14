@@ -1,7 +1,4 @@
 import os
-from flask_pymongo import PyMongo
-
-mongo = PyMongo()
 
 class Config:
     DEBUG = True
