@@ -93,38 +93,19 @@
   </div>
 
   <script>
-    document.getElementById('settings').addEventListener('submit', async function (e) {
-      e.preventDefault();
+    try {
+            const patientData = JSON.parse(localStorage.get_patient_info("patient"));
+            const token       = patientData?.access_token;
+            if (!token) {
+              console.error("No access token found");
+              return;
+            }
+            
+            
 
-      const form = e.target;
-
-      const feet = parseInt(form.height_feet.value);
-      const inches = parseInt(form.height_inches.value);
-      const height_cm = Math.round((feet * 12 + inches) * 2.54);
-
-      const data = {
-        height: height_cm,
-        weight: parseInt(form.weight.value),
-        phone_number: form.phone_number.value
-      };
-
-      const res = await fetch('http://localhost:5000/api/settings/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-      const msg = document.getElementById('message');
-
-      if (res.ok) {
-        msg.textContent = "Changes saved successfully.";
-        msg.style.color = "green";
-      } else {
-        msg.textContent = result.error || "Update failed.";
-        msg.style.color = "red";
-      }
-    });
+        }catch(err){
+            console.error("something bad happened",err);
+        }
   </script>
 </body>
 </html>

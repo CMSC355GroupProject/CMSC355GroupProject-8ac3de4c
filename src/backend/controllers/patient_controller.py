@@ -21,3 +21,15 @@ def get_current_patient():
     if not patient:
         return jsonify({"error": "Patient not found"}), 404
     return jsonify(format_patient(patient)), 200
+
+@jwt_required()
+def get_patient_info():
+    jwt_data = get_jwt_identity()
+    patient_id = jwt_data.get("patient_id")
+    height_feet = jwt_data.get("height_feet")
+    height_inches = jwt_data.get("height_inches")
+    weight = jwt_data.get("weight")
+    phone_number = jwt_data.get("phone_number")
+    if not patient:
+        return jsonify({"error":"Patient not Found"}), 404
+    return jsonify(format_patient(height_feet,height_inches,weight,phone_number))
