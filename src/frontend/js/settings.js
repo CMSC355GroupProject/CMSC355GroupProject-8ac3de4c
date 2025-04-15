@@ -5,18 +5,20 @@ async function loadSettings() {
     headers: { Authorization: `Bearer ${token}` },
   });
 
+  
+
   if (res.ok) {
     const data = await res.json();
-    // can add all of these fields: 
-    // "username": "joey_testing_new66",
-    // "email": "joey_test_new66@gmail.com",
-    // "password": "password",
-    // "dob": "01-30-1997",
-    // "height": 180,
-    // "weight": 75,
-    // "biological_gender": "male",
-    // "phone_number": "+15555551234"
+    console.log('data',data);
+
     document.getElementById('username').value = data.username || '';
+    // document.getElementById("name").value = data.name || "";
+    document.getElementById("email").value = data.email || "";
+    document.getElementById("phone_number").value = data.phone_number || "";
+    document.getElementById('dob').value = data.dob || '';
+    document.getElementById('height').value = data.height || '';
+    document.getElementById('weight').value = data.weight || '';
+    document.getElementById('biological_gender').value = data.biological_gender || '';
   } else {
     alert("Failed to load settings.");
   }
