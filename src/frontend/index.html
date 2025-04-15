@@ -44,7 +44,6 @@
       grid-template-columns: 1fr 1fr;
       gap: 40px;
       padding: 20px;
-      grid-template-rows: auto;
     }
 
     .chart-card {
@@ -66,7 +65,7 @@
 
     canvas {
       width: 100% !important;
-      height: 300px !important; /* Fixed height */
+      height: 300px !important;
     }
 
     footer {
@@ -85,45 +84,50 @@
     }
 
     #startButton {
-        display:block;
-        margin:auto;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease;
     }
 
-    button:hover {
-    background-color: #45a049;
+    #startButton:hover {
+      background-color: #45a049;
     }
 
     .button-container {
-    display: flex;
-    justify-content: center;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
     }
 
+    @media (max-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
 <body style="background-color: White;">
   <div class="header">
     <a href="/index" style=" text-decoration: none">
-        <h2 style="color: white; margin: 0 15px; text-decoration: none"> Dashboard</h2>
+      <h2 style="color: white; margin: 0 15px;">Dashboard</h2>
     </a>
     <nav>
       <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
       <a href="/settings.html" style="color: white; margin: 0 15px;">Settings</a>
       <a href="/" id='logoutButton' style="color: white; margin: 0 15px;">Logout</a>
-
     </nav>
   </div>
 
   <div class="content">
     <div class="button-container">
-        <button id='startButton' onclick="generateVitals()">Toggle Data Collection For Vitals</button>
+      <button id='startButton' onclick="generateVitals()">Toggle Data Collection For Vitals</button>
     </div>
     <div class="charts-grid">
       <div class="chart-card">
@@ -141,7 +145,6 @@
         <canvas id="ecgChart"></canvas>
       </div>
 
-      <!-- Optional 4th chart placeholder -->
       <div class="chart-card">
         <h2>Graph 4: Coming Soon</h2>
         <canvas id="placeholderChart"></canvas>
@@ -160,139 +163,156 @@
     let bpmChartInstance = null, spo2ChartInstance = null, ecgChartInstance = null;
 
     async function fetchDataAndUpdateChart() {
-      try {
-        const patientData = JSON.parse(localStorage.getItem("patient"));
-        const token = patientData?.access_token;
-        if (!token) {
-          console.error("No access token found");
-          return;
-        }
-
-        const response = await fetch('http://127.0.0.1:5000/api/vitals/', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const { timestamp, bpm, spo2, ecg } = await response.json();
-
-        timeData.push(timestamp);
-        bpmData.push(bpm);
-        spo2Data.push(spo2);
-        ecgData.push(ecg);
-
-        if (timeData.length > maxPoints) timeData.shift();
-        if (bpmData.length > maxPoints) bpmData.shift();
-        if (spo2Data.length > maxPoints) spo2Data.shift();
-        if (ecgData.length > maxPoints) ecgData.shift();
-
-        if (bpmChartInstance) bpmChartInstance.destroy();
-        if (spo2ChartInstance) spo2ChartInstance.destroy();
-        if (ecgChartInstance) ecgChartInstance.destroy();
-
-        bpmChartInstance = new Chart("bpmChart", {
-          type: "line",
-          data: {
-            labels: timeData,
-            datasets: [{
-              label: "BPM",
-              data: bpmData,
-              fill: false,
-              lineTension: 0.1,
-              borderColor: "#FF0000", // Color for the BPM line
-              backgroundColor: "rgba(255, 87, 51, 0.2)", // Light color for the fill (optional)
-              pointBackgroundColor: "#FF5733", // Color for the points
-            }]
-          },
-          options: { scales: { yAxes: [{ ticks: { min: 50, max: 110 } }] } }
-        });
-
-        spo2ChartInstance = new Chart("spo2Chart", {
-          type: "line",
-          data: {
-            labels: timeData,
-            datasets: [{
-              label: "SpO2 (%)",
-              data: spo2Data,
-              fill: false,
-              lineTension: 0.1,
-              borderColor: "#33C1FF", // Color for the SpO2 line
-              backgroundColor: "rgba(51, 193, 255, 0.2)", // Light color for the fill (optional)
-              pointBackgroundColor: "#33C1FF", // Color for the points
-            }]
-          },
-          options: { scales: { yAxes: [{ ticks: { min: 90, max: 100 } }] } }
-        });
-
-        ecgChartInstance = new Chart("ecgChart", {
-          type: "line",
-          data: {
-            labels: timeData,
-            datasets: [{
-              label: "ECG",
-              data: ecgData,
-              fill: false,
-              lineTension: 0.1,
-              borderColor: "#28A745", // Color for the ECG line
-              backgroundColor: "rgba(40, 167, 69, 0.2)", // Light color for the fill (optional)
-              pointBackgroundColor: "#28A745", // Color for the points
-            }]
-          },
-          options: {
-            scales: {
-              yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 } }],
-              xAxes: [{ display: false }]
-            },
-            animation: { duration: 0 }
-          }
-        });
-      } catch (err) {
-        console.error("Error updating charts:", err);
-      }
+  try {
+    const patientData = JSON.parse(localStorage.getItem("patient"));
+    const token = patientData?.access_token;
+    if (!token) {
+      console.error("No access token found");
+      return;
     }
+
+    const response = await fetch('http://127.0.0.1:5000/api/vitals/', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+
+    let hasData = true;
+    let timestamp = "", bpm = 0, spo2 = 0, ecg = 0;
+
+    if (response.status === 404) {
+      console.warn("No vitals data found.");
+      hasData = false;
+    } else if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    } else {
+      const data = await response.json();
+      timestamp = data.timestamp;
+      bpm = data.bpm;
+      spo2 = data.spo2;
+      ecg = data.ecg;
+    }
+
+    if (hasData) {
+      timeData.push(timestamp);
+      bpmData.push(bpm);
+      spo2Data.push(spo2);
+      ecgData.push(ecg);
+
+      if (timeData.length > maxPoints) timeData.shift();
+      if (bpmData.length > maxPoints) bpmData.shift();
+      if (spo2Data.length > maxPoints) spo2Data.shift();
+      if (ecgData.length > maxPoints) ecgData.shift();
+    }
+
+    if (bpmChartInstance) bpmChartInstance.destroy();
+    if (spo2ChartInstance) spo2ChartInstance.destroy();
+    if (ecgChartInstance) ecgChartInstance.destroy();
+
+    const defaultLabels = hasData ? timeData : ['No Data'];
+    const defaultData = hasData ? bpmData : [null];
+
+    bpmChartInstance = new Chart("bpmChart", {
+      type: "line",
+      data: {
+        labels: defaultLabels,
+        datasets: [{
+          label: "BPM",
+          data: hasData ? bpmData : [null],
+          fill: false,
+          borderColor: "#FF0000",
+          backgroundColor: "rgba(255, 87, 51, 0.2)",
+          pointBackgroundColor: "#FF5733"
+        }]
+      },
+      options: {
+        title: { display: !hasData, text: "No BPM Data Available" },
+        scales: { yAxes: [{ ticks: { min: 50, max: 110 } }] }
+      }
+    });
+
+    spo2ChartInstance = new Chart("spo2Chart", {
+      type: "line",
+      data: {
+        labels: defaultLabels,
+        datasets: [{
+          label: "SpO2 (%)",
+          data: hasData ? spo2Data : [null],
+          fill: false,
+          borderColor: "#33C1FF",
+          backgroundColor: "rgba(51, 193, 255, 0.2)",
+          pointBackgroundColor: "#33C1FF"
+        }]
+      },
+      options: {
+        title: { display: !hasData, text: "No SpO2 Data Available" },
+        scales: { yAxes: [{ ticks: { min: 90, max: 100 } }] }
+      }
+    });
+
+    ecgChartInstance = new Chart("ecgChart", {
+      type: "line",
+      data: {
+        labels: defaultLabels,
+        datasets: [{
+          label: "ECG",
+          data: hasData ? ecgData : [null],
+          fill: false,
+          borderColor: "#28A745",
+          backgroundColor: "rgba(40, 167, 69, 0.2)",
+          pointBackgroundColor: "#28A745"
+        }]
+      },
+      options: {
+        title: { display: !hasData, text: "No ECG Data Available" },
+        scales: {
+          yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 } }],
+          xAxes: [{ display: false }]
+        },
+        animation: { duration: 0 }
+      }
+    });
+
+  } catch (err) {
+    console.error("Error updating charts:", err);
+  }
+}
+
 
     document.addEventListener('DOMContentLoaded', () => {
       fetchDataAndUpdateChart();
       setInterval(fetchDataAndUpdateChart, 5000);
     });
 
-    let generating = false;  // Flag to track whether vitals generation is active
+    let generating = false;
 
     function generateVitals() {
       const patient = JSON.parse(localStorage.getItem("patient"));
-
       if (generating) {
         generating = false;
         alert("Vitals generation stopped.");
       } else {
         generating = true;
         alert("Vitals generation started.");
-
-        // Keep making requests every 5 seconds
         const intervalId = setInterval(() => {
           if (!generating) {
-            clearInterval(intervalId);  // Stop making requests if generating is false
+            clearInterval(intervalId);
             return;
           }
-
           fetch("/api/vitals/generate-vitals", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Authorization": "Bearer " + patient.access_token
             }
-          })
-          .then(res => res.json())
-          .catch(err => console.error("Failed to generate vitals:", err));
-
-        }, 5000);  // 5 second interval
+          }).then(res => res.json())
+            .catch(err => console.error("Failed to generate vitals:", err));
+        }, 5000);
       }
     }
 
-  document.getElementById("logoutButton").addEventListener("click", function () {
-  localStorage.removeItem("patient"); // clear the user data
-  window.location.href = "/";    // redirect to login page
-});
+    document.getElementById("logoutButton").addEventListener("click", function () {
+      localStorage.removeItem("patient");
+      window.location.href = "/";
+    });
   </script>
-  
 </body>
 </html>
