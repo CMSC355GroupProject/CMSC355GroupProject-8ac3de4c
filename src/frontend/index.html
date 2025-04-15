@@ -32,12 +32,11 @@
 
     /* Content */
     .content {
-      margin-top: 100px;
-      margin-bottom: 100px;
-      padding: 40px;
-      background-color: #f8f9fa;
-      min-height: 100vh;
-    }
+  margin-top: 100px;
+  padding: 40px;
+  background-color: #D3D3D3;
+  min-height: calc(100vh - 100px - 70px); /* Adjust the height to account for header + footer */
+}
 
     .charts-grid {
       display: grid;
@@ -69,13 +68,13 @@
     }
 
     footer {
-      text-align: center;
-      padding: 15px;
-      background-color: black;
-      color: white;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
+        text-align: center;
+        padding: 15px;
+        background-color: black;
+        color: white;
+        position: relative; /* Change from fixed to relative */
+        bottom: 0;
+        width: 100%;
     }
 
     nav a {
