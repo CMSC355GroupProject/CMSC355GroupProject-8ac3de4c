@@ -161,135 +161,146 @@
     let timeData = [], bpmData = [], spo2Data = [], ecgData = [];
     let bpmChartInstance = null, spo2ChartInstance = null, ecgChartInstance = null;
 
-    async function fetchDataAndUpdateChart() {
-  try {
-    const patientData = JSON.parse(localStorage.getItem("patient"));
+      async function fetchDataAndUpdateChart() {
+    try {
+      const patientData = JSON.parse(localStorage.getItem("patient"));
 
-    function isTokenExpired(token) {
+      function isTokenExpired(token) {
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const now = Math.floor(Date.now() / 1000); // current time in seconds
-            return payload.exp < now;
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const now = Math.floor(Date.now() / 1000); // current time in seconds
+          return payload.exp < now;
         } catch (e) {
-            console.error("Error decoding token:", e);
-            return true; // fail-safe: assume expired
+          console.error("Error decoding token:", e);
+          return true; // fail-safe: assume expired
         }
+      }
+
+      if (!patientData || isTokenExpired(patientData.access_token)) {
+        localStorage.removeItem("patient");
+        window.location.href = "/";
+      }
+      const token = patientData?.access_token;
+      if (!token) {
+        console.error("No access token found");
+        return;
+      }
+
+      const response = await fetch('http://127.0.0.1:5000/api/vitals/', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      let hasData = true;
+      let timestamp = "", bpm = 0, spo2 = 0, ecg = 0;
+
+      if (response.status === 404) {
+        console.warn("No vitals data found.");
+        hasData = false;
+      } else if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      } else {
+        const data = await response.json();
+        console.log('Fetched Data:', data);
+
+        // Handle the timestamp correctly by checking for $date format
+        if (data.timestamp && data.timestamp.$date) {
+          timestamp = new Date(data.timestamp.$date).toLocaleString();  // Convert to readable date
+        } else {
+          timestamp = new Date().toLocaleString();  // Use current time if timestamp is missing
         }
-    
-    if (!patientData || isTokenExpired(patientData.access_token)) {
-    localStorage.removeItem("patient");
-    window.location.href = "/";
-    }
-    const token = patientData?.access_token;
-    if (!token) {
-      console.error("No access token found");
-      return;
-    }
 
-    const response = await fetch('http://127.0.0.1:5000/api/vitals/', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-
-    let hasData = true;
-    let timestamp = "", bpm = 0, spo2 = 0, ecg = 0;
-
-    if (response.status === 404) {
-      console.warn("No vitals data found.");
-      hasData = false;
-    } else if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    } else {
-      const data = await response.json();
-      timestamp = data.timestamp;
-      bpm = data.bpm;
-      spo2 = data.spo2;
-      ecg = data.ecg;
-    }
-
-    if (hasData) {
-      timeData.push(timestamp);
-      bpmData.push(bpm);
-      spo2Data.push(spo2);
-      ecgData.push(ecg);
-
-      if (timeData.length > maxPoints) timeData.shift();
-      if (bpmData.length > maxPoints) bpmData.shift();
-      if (spo2Data.length > maxPoints) spo2Data.shift();
-      if (ecgData.length > maxPoints) ecgData.shift();
-    }
-
-    if (bpmChartInstance) bpmChartInstance.destroy();
-    if (spo2ChartInstance) spo2ChartInstance.destroy();
-    if (ecgChartInstance) ecgChartInstance.destroy();
-
-    const defaultLabels = hasData ? timeData : ['No Data'];
-    const defaultData = hasData ? bpmData : [null];
-
-    bpmChartInstance = new Chart("bpmChart", {
-      type: "line",
-      data: {
-        labels: defaultLabels,
-        datasets: [{
-          label: "BPM",
-          data: hasData ? bpmData : [null],
-          fill: false,
-          borderColor: "#FF0000",
-          backgroundColor: "rgba(255, 87, 51, 0.2)",
-          pointBackgroundColor: "#FF5733"
-        }]
-      },
-      options: {
-        title: { display: !hasData, text: "No BPM Data Available" },
-        scales: { yAxes: [{ ticks: { min: 50, max: 110 } }] }
+        bpm = data.bpm;
+        spo2 = data.spo2;
+        ecg = data.ecg;
       }
-    });
 
-    spo2ChartInstance = new Chart("spo2Chart", {
-      type: "line",
-      data: {
-        labels: defaultLabels,
-        datasets: [{
-          label: "SpO2 (%)",
-          data: hasData ? spo2Data : [null],
-          fill: false,
-          borderColor: "#33C1FF",
-          backgroundColor: "rgba(51, 193, 255, 0.2)",
-          pointBackgroundColor: "#33C1FF"
-        }]
-      },
-      options: {
-        title: { display: !hasData, text: "No SpO2 Data Available" },
-        scales: { yAxes: [{ ticks: { min: 90, max: 100 } }] }
+      if (hasData) {
+        timeData.push(timestamp);
+        bpmData.push(bpm);
+        spo2Data.push(spo2);
+        ecgData.push(ecg);
+
+        if (timeData.length > maxPoints) timeData.shift();
+        if (bpmData.length > maxPoints) bpmData.shift();
+        if (spo2Data.length > maxPoints) spo2Data.shift();
+        if (ecgData.length > maxPoints) ecgData.shift();
       }
-    });
 
-    ecgChartInstance = new Chart("ecgChart", {
-      type: "line",
-      data: {
-        labels: defaultLabels,
-        datasets: [{
-          label: "ECG",
-          data: hasData ? ecgData : [null],
-          fill: false,
-          borderColor: "#28A745",
-          backgroundColor: "rgba(40, 167, 69, 0.2)",
-          pointBackgroundColor: "#28A745"
-        }]
-      },
-      options: {
-        title: { display: !hasData, text: "No ECG Data Available" },
-        scales: {
-          yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 } }],
-          xAxes: [{ display: false }]
+      // Destroy old chart instances if they exist
+      if (bpmChartInstance) bpmChartInstance.destroy();
+      if (spo2ChartInstance) spo2ChartInstance.destroy();
+      if (ecgChartInstance) ecgChartInstance.destroy();
+
+      // Default label and data in case of no valid data
+      const defaultLabels = hasData ? timeData : ['No Data'];
+      const defaultData = hasData ? bpmData : [null];
+
+      bpmChartInstance = new Chart("bpmChart", {
+        type: "line",
+        data: {
+          labels: defaultLabels,
+          datasets: [{
+            label: "BPM",
+            data: hasData ? bpmData : [null],
+            fill: false,
+            borderColor: "#FF0000",
+            backgroundColor: "rgba(255, 87, 51, 0.2)",
+            pointBackgroundColor: "#FF5733"
+          }]
         },
-        animation: { duration: 0 }
-      }
-    });
+        options: {
+          title: { display: !hasData, text: "No BPM Data Available" },
+          scales: { yAxes: [{ ticks: { min: 50, max: 110 } }] }
+        }
+      });
 
-  } catch (err) {
-    console.error("Error updating charts:", err);
+      spo2ChartInstance = new Chart("spo2Chart", {
+        type: "line",
+        data: {
+          labels: defaultLabels,
+          datasets: [{
+            label: "SpO2 (%)",
+            data: hasData ? spo2Data : [null],
+            fill: false,
+            borderColor: "#33C1FF",
+            backgroundColor: "rgba(51, 193, 255, 0.2)",
+            pointBackgroundColor: "#33C1FF"
+          }]
+        },
+        options: {
+          title: { display: !hasData, text: "No SpO2 Data Available" },
+          scales: { yAxes: [{ ticks: { min: 90, max: 100 } }] }
+        }
+      });
+
+      ecgChartInstance = new Chart("ecgChart", {
+        type: "line",
+        data: {
+          labels: defaultLabels,
+          datasets: [{
+            label: "ECG",
+            data: hasData ? ecgData : [null],
+            fill: false,
+            borderColor: "#28A745",
+            backgroundColor: "rgba(40, 167, 69, 0.2)",
+            pointBackgroundColor: "#28A745"
+          }]
+        },
+        options: {
+          title: { display: !hasData, text: "No ECG Data Available" },
+          scales: {
+            yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 } }],
+            xAxes: [{ display: false }]
+          },
+          animation: { duration: 0 }
+        }
+      });
+
+    } catch (err) {
+      console.error("Error updating charts:", err);
+    }
   }
-}
+
 
 
     document.addEventListener('DOMContentLoaded', () => {
