@@ -4,60 +4,87 @@
   <title>Login</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body id="body" >
+<body id="body">
   <div id="bodyContainer">
     <div id="loginDiv">
       <h2>Login</h2>
-  </div>
-  <form id="loginForm">
-    <input type="email" name="email" placeholder="Email" required /><br />
-    <input type="password" name="password" placeholder="Password" required /><br />
-    <button type="submit">Login</button>
-  </form>
+    </div>
 
-  <p id="message"></p>
+    <!-- Login form -->
+    <form id="loginForm" autocomplete="off">
+      <!-- Disable auto-complete and avoid auto-fill behavior -->
+      <input type="text" name="email" placeholder="Email" required /><br />
+      <input type="text" name="password" placeholder="Password" required /><br />
+      <button type="submit">Login</button>
+      <div id="message" style="color: red; margin-top: 10px;"></div>
+    </form>
+    
 
-  <div id ='registerContainer'>
-  <p id="noAccount">Don't have an account? </p>
-  <form action="/register" method="GET">
-    <button type="submit">Register</button>
-  </div>
-  </form>
+    <!-- Register section -->
+    <div id="registerContainer">
+      <p id="noAccount">Don't have an account?</p>
+      <form action="/register" method="GET">
+        <button type="submit">Register</button>
+      </form>
+    </div>
 
-  <script>
-    document.getElementById('loginForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+    <!-- Login script -->
+    <script>
+      const loginForm = document.getElementById('loginForm');
+      console.log("Login form script loaded");
 
-      const email = e.target.email.value;
-      const password = e.target.password.value;
+      loginForm.addEventListener('submit', async function (e) {
+        console.log("Login form submitted");
+        e.preventDefault();  // Prevent form submission until validation is done
 
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        const email = e.target.email.value;
+        const password = e.target.password.value;
+        const msg = document.getElementById('message');
+    
+        msg.textContent = ""; // Clear any previous messages
+        msg.style.color = "red";
+    
+        // Email validation regex (basic check for @ and domain)
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+          msg.textContent = "Please enter a valid email address.";
+          return; // Stop form submission and show the error message
+        }
+
+        console.log("Attempting login with:", email, password);
+    
+        try {
+          const res = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+    
+          const data = await res.json();
+          console.log("Response received:", data);
+    
+          if (res.ok) {
+            console.log("Login successful");
+            msg.style.color = "green";
+            msg.textContent = "Login successful!";
+            localStorage.setItem("patient", JSON.stringify({
+              patient_id: data.patient_id,
+              access_token: data.access_token
+            }));
+            localStorage.setItem("access_token", data.access_token);
+            window.location.href = "/index";
+          } else {
+            console.warn("Login failed with error:", data.error || data.message);
+            msg.textContent = data.error || data.message || "Login failed. Please check your email and password.";
+          }
+    
+        } catch (err) {
+          console.error("Fetch error:", err);
+          msg.textContent = "An error occurred. Please try again later.";
+        }
       });
-
-      const data = await res.json();
-      const msg = document.getElementById('message');
-
-      if (res.ok) {
-        msg.textContent = "Login successful!";
-
-        // Store the patient data in localStorage
-        localStorage.setItem("patient", JSON.stringify({
-          patient_id: data.patient_id,  // Store patient_id
-          access_token: data.access_token
-        }));
-
-        // Optionally store the access_token separately if you need it
-        localStorage.setItem("access_token", data.access_token); 
-
-        window.location.href = "/index";  // or wherever you want to go
-      } else {
-        msg.textContent = data.message || "Login failed.";
-      }
-    });
-  </script>
+    </script>
+    
   </div>
 </body>
 </html>
