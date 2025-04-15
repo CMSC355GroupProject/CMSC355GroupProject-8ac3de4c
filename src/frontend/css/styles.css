@@ -147,7 +147,7 @@ h1 {
 
 canvas {
   width: 100% !important;
-  height: 300px !important; /* Fixed height */
+  height: 300px !important;
 }
 
 footer {
@@ -166,11 +166,25 @@ nav a {
 }
 
 .settings-container {
-  margin-top: 65px; /* or padding-top: 140px; */
+  margin-top: 65px; 
   padding: 20px;
 }
 
 .alerts-container {
-  margin-top: 65px; /* gives space under the fixed header */
+  margin-top: 65px; 
   padding: 20px;
 }
+
+#loginDiv{
+  margin-top: 65px; 
+  padding: 20px;
+}
+
+#registerContainer{
+  padding: 20px;
+}
+
+#noAccount{
+  padding: 10px;
+}
+
