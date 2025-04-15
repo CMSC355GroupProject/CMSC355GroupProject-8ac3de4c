@@ -98,6 +98,9 @@
   </div>
 
   <div class="content">
+    <!-- test div -->
+    <button onclick="generateVitals()">Generate Dummy Vitals</button>
+     <!-- end test div -->
     <div class="charts-grid">
       <div class="chart-card">
         <h2>Graph 1: BPM</h2>
@@ -227,6 +230,28 @@
       fetchDataAndUpdateChart();
       setInterval(fetchDataAndUpdateChart, 5000);
     });
+
+    function generateVitals() {
+  const patient = JSON.parse(localStorage.getItem("patient"));
+
+  fetch("/api/vitals/generate-vitals", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + patient.access_token
+    }
+  })
+  .then(res => {
+    if (!res.ok) {
+      throw new Error(`Server responded ${res.status}`);
+    }
+    return res.json();                // parse JSON here
+  })
+  .then(data => {
+    alert(data.message);               // now `data` is your parsed object
+  })
+  .catch(err => console.error("Failed to generate vitals:", err));
+}
   </script>
   
 </body>
