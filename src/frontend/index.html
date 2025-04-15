@@ -32,11 +32,11 @@
 
     /* Content */
     .content {
-  margin-top: 100px;
-  padding: 40px;
-  background-color: #D3D3D3;
-  min-height: calc(100vh - 100px - 70px); /* Adjust the height to account for header + footer */
-}
+    margin-top: 100px;
+    padding: 40px;
+    background-color: #D3D3D3;
+    min-height: calc(100vh - 100px - 70px); /* Adjust the height to account for header + footer */
+    }
 
     .charts-grid {
       display: grid;
@@ -120,7 +120,7 @@
     <nav>
       <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
       <a href="/settings.html" style="color: white; margin: 0 15px;">Settings</a>
-      <a href="/" id='logoutButton' style="color: white; margin: 0 15px;">Logout</a>
+      <a href="/" onclick="localStorage.removeItem('patient')" id='logoutButton' style="color: white; margin: 0 15px;">Logout</a>
     </nav>
   </div>
 
@@ -164,6 +164,22 @@
     async function fetchDataAndUpdateChart() {
   try {
     const patientData = JSON.parse(localStorage.getItem("patient"));
+
+    function isTokenExpired(token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const now = Math.floor(Date.now() / 1000); // current time in seconds
+            return payload.exp < now;
+        } catch (e) {
+            console.error("Error decoding token:", e);
+            return true; // fail-safe: assume expired
+        }
+        }
+    
+    if (!patientData || isTokenExpired(patientData.access_token)) {
+    localStorage.removeItem("patient");
+    window.location.href = "/";
+    }
     const token = patientData?.access_token;
     if (!token) {
       console.error("No access token found");
