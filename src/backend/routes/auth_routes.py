@@ -4,7 +4,6 @@ import os
 
 auth_bp = Blueprint('auth_bp', __name__, static_folder='../../frontend')
 
-# /api/auth prefix
+# /api/auth/prefix
 auth_bp.route('/register', methods=['POST'])(auth_controller.register)
 auth_bp.route('/login', methods=['POST'])(auth_controller.login)
-
