@@ -1,170 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Dashboard</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+  <title>Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
-        /* Header */
-        .header { 
-            width: 100%;
-            height: 100px;
-            background-color: lightblue;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            position: fixed;
-            top: 0;
-            left: 0;
-        }
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
 
-        /* Content */
-        .content {
-            margin-top: 220px;
-            padding: 50px;
-            background-color: white;
-            color: black;
-        }
+    /* Header */
+    .header {
+      width: 100%;
+      height: 100px;
+      background-color: lightblue;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
 
-        footer {
-            text-align: center;
-            padding: 15px;
-            background-color: black;
-            color: white;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-    </style>
+    /* Content */
+    .content {
+      margin-top: 100px;
+      margin-bottom: 100px;
+      padding: 40px;
+      background-color: #f8f9fa;
+      min-height: 100vh;
+    }
 
-    <link rel="stylesheet" href="css/styles.css">
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      padding: 20px;
+      grid-template-rows: auto;
+    }
+
+    .chart-card {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chart-card h2 {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 300px !important; /* Fixed height */
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: black;
+      color: white;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
-<body style="background-color:White;">
-    
-    <div class="header">
-        <h2>Dashboard</h2>
-        <nav>
-            <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
-            <a href="/settings.html" style="color: white; margin: 0 15px;">Settings</a>
-        </nav>
-    </div>
-    <div class="content">
-        <h1>Graph 1: BPM</h1>
-        <canvas id="bpmChart" style="width:100%;max-width:700px"></canvas>
-        
-        <h1>Graph 2: SpO2</h1>
-        <canvas id="spo2Chart" style="width:100%;max-width:700px"></canvas>
-        
-        <h1>Graph 3: ECG</h1>
-        <canvas id="ecgChart" style="width:100%;max-width:700px"></canvas>
-    </div>
-   
-    <footer>
-        <p>Footer goes here <br> © 2025. Blah Blah All rights reserved.</p>
-    </footer>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<body style="background-color: White;">
+  <div class="header">
+    <a href="/index" style=" text-decoration: none">
+        <h2 style="color: white; margin: 0 15px; text-decoration: none"> Dashboard</h2>
+    </a>
+    <nav>
+      <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
+      <a href="/settings.html" style="color: white; margin: 0 15px;">Settings</a>
+    </nav>
+  </div>
 
-    <script>
-        // Keep these arrays alive across fetches
-        const maxPoints = 24;
-        let timeData = [];
-        let bpmData  = [];
-        let spo2Data = [];
-        let ecgData  = [];
-      
-        let bpmChartInstance = null;
-        let spo2ChartInstance = null;
-        let ecgChartInstance = null;
-      
-        async function fetchDataAndUpdateChart() {
-          try {
-            const patientData = JSON.parse(localStorage.getItem("patient"));
-            const token       = patientData?.access_token;
-            if (!token) {
-              console.error("No access token found");
-              return;
-            }
-      
-            const response = await fetch('http://127.0.0.1:5000/api/vitals/', {
-              headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
-            const { timestamp, bpm, spo2, ecg } = await response.json();
-      
-            // Push new values onto the arrays
-            timeData.push(timestamp);
-            bpmData.push(bpm);
-            spo2Data.push(spo2);
-            ecgData.push(ecg);
-      
-            // Trim arrays to maxPoints
-            if (timeData.length  > maxPoints) timeData.shift();
-            if (bpmData.length   > maxPoints) bpmData.shift();
-            if (spo2Data.length  > maxPoints) spo2Data.shift();
-            if (ecgData.length   > maxPoints) ecgData.shift();
-      
-            // Re‑draw charts
-            if (bpmChartInstance)  bpmChartInstance.destroy();
-            if (spo2ChartInstance) spo2ChartInstance.destroy();
-            if (ecgChartInstance)  ecgChartInstance.destroy();
-      
-            bpmChartInstance = new Chart("bpmChart", {
-              type: "line",
-              data: {
-                labels: timeData,
-                datasets: [{ label: "BPM", data: bpmData, fill: false, lineTension: 0.1 }]
-              },
-              options: { scales: { yAxes: [{ ticks: { min: 50, max: 110 }}] } }
-            });
-      
-            spo2ChartInstance = new Chart("spo2Chart", {
-              type: "line",
-              data: {
-                labels: timeData,
-                datasets: [{ label: "SpO2 (%)", data: spo2Data, fill: false, lineTension: 0.1 }]
-              },
-              options: { scales: { yAxes: [{ ticks: { min: 90, max: 100 }}] } }
-            });
-      
-            ecgChartInstance = new Chart("ecgChart", {
-              type: "line",
-              data: {
-                labels: timeData,
-                datasets: [{ label: "ECG", data: ecgData, fill: false, lineTension: 0.1, pointRadius: 0 }]
-              },
-              options: {
-                scales: {
-                  yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 }}],
-                  xAxes: [{ display: false }]
-                },
-                animation: { duration: 0 }
-              }
-            });
-      
-          } catch (err) {
-            console.error("Error updating charts:", err);
-          }
+  <div class="content">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h2>Graph 1: BPM</h2>
+        <canvas id="bpmChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h2>Graph 2: SpO2</h2>
+        <canvas id="spo2Chart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h2>Graph 3: ECG</h2>
+        <canvas id="ecgChart"></canvas>
+      </div>
+
+      <!-- Optional 4th chart placeholder -->
+      <div class="chart-card">
+        <h2>Graph 4: Coming Soon</h2>
+        <canvas id="placeholderChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>CMSC355 Group Project<br> © 2025. Blah Blah All rights reserved.</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+  <script>
+    const maxPoints = 24;
+    let timeData = [], bpmData = [], spo2Data = [], ecgData = [];
+    let bpmChartInstance = null, spo2ChartInstance = null, ecgChartInstance = null;
+  
+    async function fetchDataAndUpdateChart() {
+      try {
+        const patientData = JSON.parse(localStorage.getItem("patient"));
+        const token = patientData?.access_token;
+        if (!token) {
+          console.error("No access token found");
+          return;
         }
-      
-        document.addEventListener('DOMContentLoaded', () => {
-          fetchDataAndUpdateChart();
-          setInterval(fetchDataAndUpdateChart, 5000);
+  
+        const response = await fetch('http://127.0.0.1:5000/api/vitals/', {
+          headers: { 'Authorization': 'Bearer ' + token }
         });
-      </script>
-
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  
+        const { timestamp, bpm, spo2, ecg } = await response.json();
+  
+        timeData.push(timestamp);
+        bpmData.push(bpm);
+        spo2Data.push(spo2);
+        ecgData.push(ecg);
+  
+        if (timeData.length > maxPoints) timeData.shift();
+        if (bpmData.length > maxPoints) bpmData.shift();
+        if (spo2Data.length > maxPoints) spo2Data.shift();
+        if (ecgData.length > maxPoints) ecgData.shift();
+  
+        if (bpmChartInstance) bpmChartInstance.destroy();
+        if (spo2ChartInstance) spo2ChartInstance.destroy();
+        if (ecgChartInstance) ecgChartInstance.destroy();
+  
+        bpmChartInstance = new Chart("bpmChart", {
+          type: "line",
+          data: {
+            labels: timeData,
+            datasets: [{
+              label: "BPM",
+              data: bpmData,
+              fill: false,
+              lineTension: 0.1,
+              borderColor: "#FF0000", // Color for the BPM line
+              backgroundColor: "rgba(255, 87, 51, 0.2)", // Light color for the fill (optional)
+              pointBackgroundColor: "#FF5733", // Color for the points
+            }]
+          },
+          options: { scales: { yAxes: [{ ticks: { min: 50, max: 110 } }] } }
+        });
+  
+        spo2ChartInstance = new Chart("spo2Chart", {
+          type: "line",
+          data: {
+            labels: timeData,
+            datasets: [{
+              label: "SpO2 (%)",
+              data: spo2Data,
+              fill: false,
+              lineTension: 0.1,
+              borderColor: "#33C1FF", // Color for the SpO2 line
+              backgroundColor: "rgba(51, 193, 255, 0.2)", // Light color for the fill (optional)
+              pointBackgroundColor: "#33C1FF", // Color for the points
+            }]
+          },
+          options: { scales: { yAxes: [{ ticks: { min: 90, max: 100 } }] } }
+        });
+  
+        ecgChartInstance = new Chart("ecgChart", {
+          type: "line",
+          data: {
+            labels: timeData,
+            datasets: [{
+              label: "ECG",
+              data: ecgData,
+              fill: false,
+              lineTension: 0.1,
+              borderColor: "#28A745", // Color for the ECG line
+              backgroundColor: "rgba(40, 167, 69, 0.2)", // Light color for the fill (optional)
+              pointBackgroundColor: "#28A745", // Color for the points
+            }]
+          },
+          options: {
+            scales: {
+              yAxes: [{ ticks: { suggestedMin: -1.5, suggestedMax: 1.5 } }],
+              xAxes: [{ display: false }]
+            },
+            animation: { duration: 0 }
+          }
+        });
+      } catch (err) {
+        console.error("Error updating charts:", err);
+      }
+    }
+  
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchDataAndUpdateChart();
+      setInterval(fetchDataAndUpdateChart, 5000);
+    });
+  </script>
+  
 </body>
 </html>
