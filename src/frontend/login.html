@@ -6,7 +6,9 @@
 </head>
 <body id="body" >
   <div id="bodyContainer">
-  <h2>Login</h2>
+    <div id="loginDiv">
+      <h2>Login</h2>
+  </div>
   <form id="loginForm">
     <input type="email" name="email" placeholder="Email" required /><br />
     <input type="password" name="password" placeholder="Password" required /><br />
@@ -15,9 +17,11 @@
 
   <p id="message"></p>
 
-  <p>Don't have an account? </p>
+  <div id ='registerContainer'>
+  <p id="noAccount">Don't have an account? </p>
   <form action="/register" method="GET">
     <button type="submit">Register</button>
+  </div>
   </form>
 
   <script>

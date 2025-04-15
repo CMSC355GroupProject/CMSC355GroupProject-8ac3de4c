@@ -83,6 +83,28 @@
       text-decoration: none;
       font-weight: bold;
     }
+
+    #startButton {
+        display:block;
+        margin:auto;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    }
+
+    button:hover {
+    background-color: #45a049;
+    }
+
+    .button-container {
+    display: flex;
+    justify-content: center;
+    }
+
   </style>
 </head>
 
@@ -94,13 +116,15 @@
     <nav>
       <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
       <a href="/settings.html" style="color: white; margin: 0 15px;">Settings</a>
+      <a href="/" id='logoutButton' style="color: white; margin: 0 15px;">Logout</a>
+
     </nav>
   </div>
 
   <div class="content">
-    <!-- test div -->
-    <button onclick="generateVitals()">Generate Dummy Vitals</button>
-     <!-- end test div -->
+    <div class="button-container">
+        <button id='startButton' onclick="generateVitals()">Toggle Data Collection For Vitals</button>
+    </div>
     <div class="charts-grid">
       <div class="chart-card">
         <h2>Graph 1: BPM</h2>
@@ -134,7 +158,7 @@
     const maxPoints = 24;
     let timeData = [], bpmData = [], spo2Data = [], ecgData = [];
     let bpmChartInstance = null, spo2ChartInstance = null, ecgChartInstance = null;
-  
+
     async function fetchDataAndUpdateChart() {
       try {
         const patientData = JSON.parse(localStorage.getItem("patient"));
@@ -143,28 +167,28 @@
           console.error("No access token found");
           return;
         }
-  
+
         const response = await fetch('http://127.0.0.1:5000/api/vitals/', {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  
+
         const { timestamp, bpm, spo2, ecg } = await response.json();
-  
+
         timeData.push(timestamp);
         bpmData.push(bpm);
         spo2Data.push(spo2);
         ecgData.push(ecg);
-  
+
         if (timeData.length > maxPoints) timeData.shift();
         if (bpmData.length > maxPoints) bpmData.shift();
         if (spo2Data.length > maxPoints) spo2Data.shift();
         if (ecgData.length > maxPoints) ecgData.shift();
-  
+
         if (bpmChartInstance) bpmChartInstance.destroy();
         if (spo2ChartInstance) spo2ChartInstance.destroy();
         if (ecgChartInstance) ecgChartInstance.destroy();
-  
+
         bpmChartInstance = new Chart("bpmChart", {
           type: "line",
           data: {
@@ -181,7 +205,7 @@
           },
           options: { scales: { yAxes: [{ ticks: { min: 50, max: 110 } }] } }
         });
-  
+
         spo2ChartInstance = new Chart("spo2Chart", {
           type: "line",
           data: {
@@ -198,7 +222,7 @@
           },
           options: { scales: { yAxes: [{ ticks: { min: 90, max: 100 } }] } }
         });
-  
+
         ecgChartInstance = new Chart("ecgChart", {
           type: "line",
           data: {
@@ -225,33 +249,49 @@
         console.error("Error updating charts:", err);
       }
     }
-  
+
     document.addEventListener('DOMContentLoaded', () => {
       fetchDataAndUpdateChart();
       setInterval(fetchDataAndUpdateChart, 5000);
     });
 
-    function generateVitals() {
-  const patient = JSON.parse(localStorage.getItem("patient"));
+    let generating = false;  // Flag to track whether vitals generation is active
 
-  fetch("/api/vitals/generate-vitals", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + patient.access_token
+    function generateVitals() {
+      const patient = JSON.parse(localStorage.getItem("patient"));
+
+      if (generating) {
+        generating = false;
+        alert("Vitals generation stopped.");
+      } else {
+        generating = true;
+        alert("Vitals generation started.");
+
+        // Keep making requests every 5 seconds
+        const intervalId = setInterval(() => {
+          if (!generating) {
+            clearInterval(intervalId);  // Stop making requests if generating is false
+            return;
+          }
+
+          fetch("/api/vitals/generate-vitals", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + patient.access_token
+            }
+          })
+          .then(res => res.json())
+          .catch(err => console.error("Failed to generate vitals:", err));
+
+        }, 5000);  // 5 second interval
+      }
     }
-  })
-  .then(res => {
-    if (!res.ok) {
-      throw new Error(`Server responded ${res.status}`);
-    }
-    return res.json();                // parse JSON here
-  })
-  .then(data => {
-    alert(data.message);               // now `data` is your parsed object
-  })
-  .catch(err => console.error("Failed to generate vitals:", err));
-}
+
+  document.getElementById("logoutButton").addEventListener("click", function () {
+  localStorage.removeItem("patient"); // clear the user data
+  window.location.href = "/";    // redirect to login page
+});
   </script>
   
 </body>
