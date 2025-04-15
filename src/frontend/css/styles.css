@@ -188,3 +188,7 @@ nav a {
   padding: 10px;
 }
 
+#genderDropdown{
+  width:95%;
+  text-align: center;
+}
