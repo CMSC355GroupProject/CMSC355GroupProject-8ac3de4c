@@ -126,7 +126,7 @@
 
   <div class="content">
     <div class="button-container">
-      <button id='startButton' onclick="generateVitals()">Toggle Data Collection For Vitals</button>
+      <button id='startButton' onclick="generateVitals()">Start Vitals Data Collection</button>
     </div>
     <div class="charts-grid">
       <div class="chart-card">
@@ -300,28 +300,35 @@
     let generating = false;
 
     function generateVitals() {
-      const patient = JSON.parse(localStorage.getItem("patient"));
-      if (generating) {
+    const patient = JSON.parse(localStorage.getItem("patient"));
+    const startButton = document.getElementById("startButton");
+
+    if (generating) {
         generating = false;
         alert("Vitals generation stopped.");
-      } else {
+        startButton.style.backgroundColor = "#4CAF50"; // Revert to original color (green)
+        startButton.textContent = "Start Vitals Data Collection"; // Change text back to "Start Data Collection"
+    } else {
         generating = true;
         alert("Vitals generation started.");
+        startButton.style.backgroundColor = "red"; // Change to red when data collection starts
+        startButton.textContent = "Stop Vitals Data Collection"; // Change text to "Stop Data Collection"
+
         const intervalId = setInterval(() => {
-          if (!generating) {
+        if (!generating) {
             clearInterval(intervalId);
             return;
-          }
-          fetch("/api/vitals/generate-vitals", {
+        }
+        fetch("/api/vitals/generate-vitals", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer " + patient.access_token
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + patient.access_token
             }
-          }).then(res => res.json())
+        }).then(res => res.json())
             .catch(err => console.error("Failed to generate vitals:", err));
         }, 5000);
-      }
+    }
     }
 
     document.getElementById("logoutButton").addEventListener("click", function () {
