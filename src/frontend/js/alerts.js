@@ -7,11 +7,11 @@ const patient = JSON.parse(localStorage.getItem("patient"));
 function isTokenExpired(token) {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    const now = Math.floor(Date.now() / 1000); // current time in seconds
+    const now = Math.floor(Date.now() / 1000);
     return payload.exp < now;
   } catch (e) {
     console.error("Error decoding token:", e);
-    return true; // fail-safe: assume expired
+    return true;
   }
 }
 
@@ -20,57 +20,98 @@ if (!patient || isTokenExpired(patient.access_token)) {
   window.location.href = "/";
 }
 
-// Get the patient_id from localStorage to filter alerts
-const patient_id = patient ? patient.patient_id : null;
+const patient_id = patient?.patient_id;
 
-// Load existing alerts for the current patient
+// Load alerts
 async function loadAlerts() {
-  if (patient_id) {
+    if (!patient_id) return;
+  
     const res = await fetch(`${API}?patient_id=${patient_id}`);
     const alerts = await res.json();
     const tbody = document.getElementById('alertsBody');
     tbody.innerHTML = '';
-
+  
+    console.log("Fetched alerts:", alerts);
+  
     if (alerts.length > 0) {
-      alerts.forEach(a => {
+      alerts.forEach(alert => {
+        console.log("Alert object:", alert); // Log each alert
+  
         const tr = document.createElement('tr');
+        tr.dataset.alertId = alert.id || alert._id; // Fallback to _id for safety
+  
         tr.innerHTML = `
-          <td>${a.sensor_type || ''}</td>
-          <td>${a.measured_value ?? ''}</td>
-          <td>${a.threshold_value ?? ''}</td>
-          <td>${a.comparison || ''}</td>
-          <td>${a.message || ''}</td>
-          <td>${a.is_sent}</td>
-          <td>${a.timestamp ? new Date(a.timestamp).toLocaleString() : ''}</td>
+          <td contenteditable="false">${alert.sensor_type}</td>
+          <td>${alert.measured_value ?? ''}</td>
+          <td contenteditable="false">${alert.threshold_value}</td>
+          <td contenteditable="false">${alert.comparison}</td>
+          <td contenteditable="false">${alert.message}</td>
+          <td>${alert.is_sent}</td>
+          <td>${alert.timestamp ? new Date(alert.timestamp).toLocaleString() : ''}</td>
+          <td>
+            <button class="edit-btn">Edit</button>
+            <button class="save-btn" style="display:none;">Save</button>
+          </td>
         `;
+  
         tbody.appendChild(tr);
       });
+  
+      attachEditListeners();
     } else {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No alerts found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No alerts found.</td></tr>';
     }
-  } else {
-    // If patient_id is missing, redirect to login
-    alert("Patient data is missing. Please log in again.");
-    window.location.href = "/";
   }
+  
+
+function attachEditListeners() {
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.onclick = () => {
+      const row = btn.closest('tr');
+      row.querySelectorAll('td[contenteditable]').forEach(td => td.contentEditable = true);
+      row.querySelector('.edit-btn').style.display = 'none';
+      row.querySelector('.save-btn').style.display = 'inline-block';
+    };
+  });
+
+  document.querySelectorAll('.save-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const row = btn.closest('tr');
+      const alertId = row.dataset.alertId;
+      const cells = row.querySelectorAll('td');
+
+      const payload = {
+        sensor_type: cells[0].innerText.trim(),
+        threshold_value: parseFloat(cells[2].innerText),
+        comparison: cells[3].innerText.trim(),
+        message: cells[4].innerText.trim()
+      };
+
+      console.log('payload',payload);
+
+      const res = await fetch(`/api/alerts/${alertId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert("Alert updated.");
+        loadAlerts();
+      } else {
+        console.error('Failed to update alert');
+        alert("Update failed.");
+      }
+    };
+  });
 }
 
-// Handle alert form submission
+// Create new alert
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('alertForm');
 
-  if (!form) {
-    console.error("alertForm not found in DOM");
-    return;
-  }
-
-  form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async e => {
     e.preventDefault();
-
-    if (!patient || !patient.patient_id) {
-      alert('Patient ID missing from localStorage');
-      return;
-    }
 
     const payload = {
       patient_id: patient.patient_id,
@@ -96,6 +137,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Load alerts for the current patient on page load
   loadAlerts();
 });

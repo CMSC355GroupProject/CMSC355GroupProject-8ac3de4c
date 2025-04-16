@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <title>Alert Manager</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/static/css/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
 </head>
-<div class="header">
-  <a href="/index" style=" text-decoration: none">
-    <h2 style="color: white; margin: 0 15px;">Dashboard</h2>
-  </a>
-  <nav>
-    <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
-    <a href="/settings.html" style="color: white; margin: 0 15px;">Settings</a>
-    <a href="/" onclick="localStorage.removeItem('patient')" id='logoutButton' style="color: white; margin: 0 15px;">Logout</a>
-  </nav>
-</div>
-
 <body>
+  <div class="header">
+    <a href="/index" style="text-decoration: none">
+      <h2 style="color: white; margin: 0 15px;">Dashboard</h2>
+    </a>
+    <nav>
+      <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
+      <a href="/settings" style="color: white; margin: 0 15px;">Settings</a>
+      <a href="/" onclick="localStorage.removeItem('patient')" id='logoutButton' style="color: white; margin: 0 15px;">Logout</a>
+    </nav>
+  </div>
+
   <div class="alerts-container">
     <h1>Alert Dashboard</h1>
 
@@ -61,15 +61,16 @@
           <th>Message</th>
           <th>Sent?</th>
           <th>Timestamp</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="alertsBody">
-        <tr><td colspan="7" style="text-align:center;">Loading alerts…</td></tr>
+        <tr><td colspan="8" style="text-align:center;">Loading alerts…</td></tr>
       </tbody>
     </table>
   </div>
 
-  <script src="./js/alerts.js" defer></script>
+  <script src="/static/js/alerts.js" defer></script>
 </body>
 <footer>
   <p>CMSC355 Group Project<br> © 2025. Blah Blah All rights reserved.</p>

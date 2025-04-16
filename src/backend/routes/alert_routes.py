@@ -12,3 +12,8 @@ def create_alert():
 @alert_bp.route('/', methods=['GET'])
 def get_alerts():
     return alert_controller.get_alerts()
+
+@alert_bp.route('/<alert_id>', methods=['PUT'])
+def update_alert(alert_id):
+    print("Inside update_alert route")
+    return alert_controller.update_alert(alert_id)
