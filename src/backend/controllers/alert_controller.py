@@ -10,7 +10,7 @@ import os
 
 
 
-# POST: Create an alert
+# Create alerts
 def create_alert():
     data = request.get_json()
 
@@ -99,7 +99,7 @@ def create_alert():
     
 
 
-# GET: Retrieve alerts
+# Retrieve alerts
 def get_alerts():
     # Get query parameters
     patient_id = request.args.get('patient_id')
@@ -141,7 +141,6 @@ def update_alert(alert_id):
     # Log the incoming data
     print(f"Data received: {data}")
 
-    # Validate ObjectId
     try:
         alert_obj_id = ObjectId(alert_id)
     except Exception as e:
@@ -151,7 +150,7 @@ def update_alert(alert_id):
     # Log ObjectId conversion
     print(f"alert_id: {alert_id}, alert_obj_id: {alert_obj_id}")
 
-    # Optional: validate allowed fields
+    # validate allowed fields
     update_fields = {}
     allowed_fields = {"sensor_type", "comparison", "threshold_value", "message"}
     for field in allowed_fields:

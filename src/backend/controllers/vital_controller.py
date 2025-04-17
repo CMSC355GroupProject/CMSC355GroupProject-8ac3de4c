@@ -8,26 +8,18 @@ from datetime import datetime
 
 def create_dummy_vitals(patient_id):
     try:
-        # Ensure it's a valid ObjectId
         patient_obj_id = ObjectId(patient_id)
     except Exception as e:
         return {"error": f"Invalid patient_id: {str(e)}"}, 400
 
-    # Check if patient exists using ObjectId
     patient = mongo.db.patients.find_one({"_id": patient_obj_id})
     if not patient:
         return {"error": "Patient not found"}, 404
 
-    # Generate dummy vitals
     vitals_doc = generate_vital_data(patient_obj_id)
-
-    # Ensure the timestamp is a datetime object that MongoDB can insert
     vitals_doc["timestamp"] = datetime.utcnow()  
-
-    # Insert vitals document
     insert_result = mongo.db.vitals.insert_one(vitals_doc)
 
-    # Return what was inserted
     return {
         "patient_id": str(vitals_doc["patient_id"]),
         "timestamp": vitals_doc["timestamp"].isoformat(),  
