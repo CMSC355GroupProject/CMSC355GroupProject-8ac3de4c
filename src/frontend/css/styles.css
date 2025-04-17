@@ -61,7 +61,7 @@ p {
 .alerts-table td {
   border: 1px solid #ccc;
   padding: 8px;
-  text-align: left;
+  text-align: center;
 }
 .alerts-table th {
   background-color: #f2f2f2;
@@ -112,6 +112,33 @@ h1 {
   margin-top: 40px;
   margin-bottom: 10px;
 }
+
+#edit-btn, #save-btn{
+  margin:0;
+  width:60%
+}
+
+#edit-btn{
+  background-color: gray;
+}
+
+#delete-btn{
+  margin-left: 0px;
+  margin-right: 10px;
+  width:40%;
+  color:black;
+  background-color: #D32F2F;
+}
+
+.actions {
+  display: flex;
+  gap: 1px;           
+  align-items: center;
+}
+.actions button {
+  flex-shrink: 0;     
+}
+
 
 * {
   margin: 0;

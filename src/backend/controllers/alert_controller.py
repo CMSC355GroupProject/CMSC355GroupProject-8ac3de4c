@@ -178,3 +178,13 @@ def update_alert(alert_id):
 
     updated_alert = mongo.db.alerts.find_one({"_id": alert_obj_id})
     return jsonify(format_alert(updated_alert)), 200
+
+def delete_alert(alert_id):
+    try:
+        oid = ObjectId(alert_id)
+    except:
+        return jsonify({"error": "Invalid alert_id"}), 400
+    result = mongo.db.alerts.delete_one({"_id": oid})
+    if result.deleted_count == 0:
+        return jsonify({"error": "Alert not found"}), 404
+    return jsonify({"message": "Alert deleted"}), 200

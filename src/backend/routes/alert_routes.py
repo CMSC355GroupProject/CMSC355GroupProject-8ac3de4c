@@ -17,3 +17,7 @@ def get_alerts():
 def update_alert(alert_id):
     print("Inside update_alert route")
     return alert_controller.update_alert(alert_id)
+
+@alert_bp.route('/<alert_id>', methods=['DELETE'])
+def delete_alert(alert_id):
+    return alert_controller.delete_alert(alert_id)
