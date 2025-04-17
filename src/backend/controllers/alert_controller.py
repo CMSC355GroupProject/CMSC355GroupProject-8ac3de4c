@@ -133,3 +133,58 @@ def get_alerts():
         return jsonify({"message": "No alerts found matching the criteria."}), 404
 
     return jsonify(alerts), 200
+
+def update_alert(alert_id):
+    print("Inside update_alert route")
+    data = request.get_json()
+
+    # Log the incoming data
+    print(f"Data received: {data}")
+
+    # Validate ObjectId
+    try:
+        alert_obj_id = ObjectId(alert_id)
+    except Exception as e:
+        print(f"Error converting alert_id: {e}")
+        return jsonify({"error": "Invalid alert_id"}), 400
+
+    # Log ObjectId conversion
+    print(f"alert_id: {alert_id}, alert_obj_id: {alert_obj_id}")
+
+    # Optional: validate allowed fields
+    update_fields = {}
+    allowed_fields = {"sensor_type", "comparison", "threshold_value", "message"}
+    for field in allowed_fields:
+        if field in data:
+            update_fields[field] = data[field]
+
+    if not update_fields:
+        return jsonify({"error": "No valid fields to update"}), 400
+
+    # Log update fields before query
+    print(f"Update fields: {update_fields}")
+
+    # Update the alert
+    result = mongo.db.alerts.update_one(
+        {"_id": alert_obj_id},
+        {"$set": update_fields}
+    )
+
+    # Log query result
+    print(f"Matched count: {result.matched_count}")
+
+    if result.matched_count == 0:
+        return jsonify({"error": "Alert not found"}), 404
+
+    updated_alert = mongo.db.alerts.find_one({"_id": alert_obj_id})
+    return jsonify(format_alert(updated_alert)), 200
+
+def delete_alert(alert_id):
+    try:
+        oid = ObjectId(alert_id)
+    except:
+        return jsonify({"error": "Invalid alert_id"}), 400
+    result = mongo.db.alerts.delete_one({"_id": oid})
+    if result.deleted_count == 0:
+        return jsonify({"error": "Alert not found"}), 404
+    return jsonify({"message": "Alert deleted"}), 200

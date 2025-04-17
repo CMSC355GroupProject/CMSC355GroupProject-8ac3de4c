@@ -13,7 +13,7 @@ jwt   = JWTManager()
 def create_app():
     app = Flask(__name__,
             static_folder='../frontend',  # Folder with your static files
-            static_url_path='',
+            static_url_path='/static',
             template_folder='../frontend')
     
     CORS(app)
@@ -42,6 +42,10 @@ def create_app():
     @app.route('/alerts')
     def alerts():
         return render_template('alerts.html')
+    
+    @app.route('/settings')
+    def settings():
+        return render_template('settings.html')
 
     from routes.auth_routes    import auth_bp
     from routes.patient_routes import patient_bp

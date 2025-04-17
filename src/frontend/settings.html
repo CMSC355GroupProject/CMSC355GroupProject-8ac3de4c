@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <title>Settings</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <div class="header">
   <a href="/index" style=" text-decoration: none">
@@ -11,7 +11,7 @@
   </a>
   <nav>
     <a href="/alerts" style="color: white; margin: 0 15px;">Alerts</a>
-    <a href="/settings.html" style="color: white; margin: 0 15px;">Settings</a>
+    <a href="/settings" style="color: white; margin: 0 15px;">Settings</a>
     <a href="/" onclick="localStorage.removeItem('patient')" id='logoutButton' style="color: white; margin: 0 15px;">Logout</a>
   </nav>
 </div>
@@ -91,6 +91,6 @@
     }
   </script>
 
-  <script src="/js/settings.js"></script>
+<script src="/static/js/settings.js" defer></script>
 </body>
 </html>
