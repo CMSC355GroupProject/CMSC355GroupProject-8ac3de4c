@@ -2,12 +2,12 @@ const patient = JSON.parse(localStorage.getItem("patient"));
 
 function isTokenExpired(token) {
   try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const now = Math.floor(Date.now() / 1000); 
-      return payload.exp < now;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp < now;
   } catch (e) {
-      console.error("Error decoding token:", e);
-      return true; 
+    console.error("Error decoding token:", e);
+    return true;
   }
 }
 
@@ -25,7 +25,6 @@ async function loadSettings() {
 
   if (res.ok) {
     const data = await res.json();
-    console.log('data', data);
 
     document.getElementById('username').value = data.username || '';
     document.getElementById("email").value = data.email || "";
@@ -39,36 +38,52 @@ async function loadSettings() {
   }
 }
 
-document.getElementById("settingsForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  // Collect the form data
-  const updatedData = {
-    username: document.getElementById('username').value,
-    email: document.getElementById('email').value,
-    phone_number: document.getElementById('phone_number').value,
-    dob: document.getElementById('dob').value,
-    height: document.getElementById('height').value,
-    weight: document.getElementById('weight').value,
-    biological_gender: document.getElementById('biological_gender').value,
-  };
-
-  // Send the update request
-  const res = await fetch("/api/patient/update", {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(updatedData),
+function toggleFields(enabled) {
+  const fields = ['phone_number', 'dob', 'height', 'weight', 'biological_gender'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !enabled;
   });
+}
 
-  if (res.ok) {
-    alert("Your settings have been updated.");
-    loadSettings();
+document.getElementById("editSaveButton").addEventListener("click", async () => {
+  const button = document.getElementById("editSaveButton");
+  const isEditing = button.textContent === "Edit";
+
+  if (isEditing) {
+    // Enable fields for editing
+    toggleFields(true);
+    button.textContent = "Save Changes";
   } else {
-    const error = await res.json();
-    alert(`Failed to update: ${error.error}`);
+    // Save changes
+    const updatedData = {
+      username: document.getElementById('username').value,
+      email: document.getElementById('email').value,
+      phone_number: document.getElementById('phone_number').value,
+      dob: document.getElementById('dob').value,
+      height: document.getElementById('height').value,
+      weight: document.getElementById('weight').value,
+      biological_gender: document.getElementById('biological_gender').value,
+    };
+
+    const res = await fetch("/api/patient/update", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(updatedData),
+    });
+
+    if (res.ok) {
+      alert("Your settings have been updated.");
+      loadSettings();
+      toggleFields(false);
+      button.textContent = "Edit";
+    } else {
+      const error = await res.json();
+      alert(`Failed to update: ${error.error}`);
+    }
   }
 });
 
